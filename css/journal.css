@@ -41,6 +41,15 @@ Trading Journal Styles
     display: none;
 }
 
+#toggleMenu .icon {
+    display: inline-block;
+    transition: transform 0.3s ease;
+}
+
+#toggleMenu.active .icon {
+    transform: rotate(90deg);
+  }
+
 
 .journal-container {
     flex: 1;

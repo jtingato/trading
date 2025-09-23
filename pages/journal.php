@@ -77,7 +77,9 @@ try {
 <div class="journal-layout">
     <!-- Left-hand menu -->
    <div class="journal-menu-wrapper">
-    <button id="toggleMenu">☰ Menu</button>
+        <button id="toggleMenu">
+            <span class="icon">☰</span> Menu
+        </button>
 
         <aside class="journal-menu">
             <ul>
@@ -95,6 +97,7 @@ try {
 
         toggleBtn.addEventListener('click', function () {
             menu.classList.toggle('collapsed');
+            toggleBtn.classList.toggle('active');
         });
     });
 </script>
