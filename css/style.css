@@ -1,0 +1,157 @@
+/* =====================
+   Global Layout & Header
+   ===================== */
+   header {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        padding: 10px 20px;
+        background-color: #f8f8f8;
+        min-height: 160px; /* ensure enough space for the logo */
+    }
+    
+    .logo {
+        max-height: 150px;
+        height: auto;
+        width: auto;
+        margin-right: 20px;
+    }
+    
+    /* =====================
+       Navigation Styles
+       ===================== */
+    nav {
+        background-color: #e0e0e0;
+        padding: 10px 20px;
+        border-radius: 5px;
+    }
+    
+    nav ul {
+        flex-wrap: wrap;
+        list-style-type: none;
+        margin: 0;
+        padding: 0;
+        display: flex;
+        justify-content: center;
+    }
+    
+    nav ul li {
+        margin: 0 15px;
+    }
+    
+    nav ul li a {
+        text-decoration: none;
+        color: #333;
+        font-size: 1.1em;
+        font-weight: 500;
+    }
+    
+    nav ul li a:hover {
+        color: #007bff;
+    }
+    
+    /* Active page highlight */
+    nav ul li a.active {
+        color: #007bff;
+        font-weight: bold;
+        border-bottom: 2px solid #007bff;
+    }
+    
+    /* =====================
+       Main Content
+       ===================== */
+    main {
+        padding: 20px;
+        min-height: 80vh;
+    }
+    
+    /* Utility classes */
+    .text-center {
+        text-align: center;
+    }
+    
+    /* =====================
+       Trading Journal Styles
+       ===================== */
+    .journal-container {
+        overflow-x: auto;
+    }
+    
+    .journal-table {
+        width: 100%;
+        border-collapse: collapse;
+    }
+    
+    .journal-table th,
+    .journal-table td {
+        border: 1px solid #ccc;
+        padding: 8px;
+        text-align: left;
+    }
+    
+    .journal-table th {
+        background-color: #f0f0f0;
+    }
+    
+    /* Alternating row colors */
+    .journal-table tr:nth-child(even) {
+        background-color: #fafafa;
+    }
+    
+    /* Hover effect */
+    .journal-table tr:hover {
+        background-color: #f1f7ff;
+    }
+    
+    /* Profit/Loss highlighting */
+    td.profit {
+        color: green;
+        font-weight: bold;
+    }
+    td.loss {
+        color: red;
+        font-weight: bold;
+    }
+    
+    /* =====================
+       Responsive Design
+       ===================== */
+    @media (max-width: 768px) {
+        header {
+            flex-direction: column;
+            align-items: flex-start;
+        }
+        nav ul {
+            flex-direction: column;
+            align-items: flex-start;
+        }
+        nav ul li {
+            margin: 5px 0;
+        }
+    }
+    
+    .modal {
+        display: none;
+        position: fixed;
+        z-index: 1000;
+        left: 0; top: 0;
+        width: 100%; height: 100%;
+        background-color: rgba(0,0,0,0.5);
+    }
+    
+    .modal-content {
+        background-color: #fff;
+        margin: 10% auto;
+        padding: 20px;
+        border-radius: 8px;
+        width: 300px;
+        box-shadow: 0 0 10px rgba(0,0,0,0.3);
+    }
+    
+    .close {
+        float: right;
+        font-size: 24px;
+        font-weight: bold;
+        cursor: pointer;
+    }
+    
