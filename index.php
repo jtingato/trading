@@ -4,7 +4,9 @@
     <meta charset="UTF-8">
     <title>Monarch Trading Journal</title>
     <link rel="stylesheet" href="css/style.css">
-    <link rel="stylesheet" href="css/journal.css?v=2">
+    <link rel="stylesheet" href="css/journal.css?v=3">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+
 </head>
 <body>
     <header>
@@ -27,7 +29,6 @@
         } else {
             echo "<h2>404 Page not found</h2>";
         }
-       
         ?>
     </main>
 

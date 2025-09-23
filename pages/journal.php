@@ -77,16 +77,28 @@ try {
 <div class="journal-layout">
     <!-- Left-hand menu -->
    <div class="journal-menu-wrapper">
-    <button id="toggle-menu">☰ Menu</button>
-    
+    <button id="toggleMenu">☰ Menu</button>
+
         <aside class="journal-menu">
             <ul>
-                <li><a href="?page=journal&action=add_sample">➕ Add Sample Data</a></li>
-                <li><a href="?page=journal&action=add_new">📝 Add New Entry</a></li>
-                <li><a href="?page=journal&action=select_fields">⚙️ Select Fields</a></li>
+                <li><a href="?page=journal&action=add_sample"><i class="fas fa-database"></i> Add Sample Data</a></li>
+                <li><a href="?page=journal&action=add_new"><i class="fas fa-pen"></i> Add New Entry</a></li>
+                <li><a href="?page=journal&action=select_fields"><i class="fas fa-sliders-h"></i> Select Fields</a></li>
             </ul>
         </aside>
     </div>
+
+<script>
+    document.addEventListener('DOMContentLoaded', function () {
+        const toggleBtn = document.getElementById('toggleMenu');
+        const menu = document.querySelector('.journal-menu');
+
+        toggleBtn.addEventListener('click', function () {
+            menu.classList.toggle('collapsed');
+        });
+    });
+</script>
+
 
     <!-- Right-hand journal content -->
     <div class="journal-container">
