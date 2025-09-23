@@ -72,32 +72,21 @@ try {
 }
 ?>
 
-<style>
-.journal-layout { display:flex; gap:20px; align-items:flex-start; margin-top:10px; }
-.journal-menu { width:200px; background:#f8f9fa; border:1px solid #ddd; border-radius:8px; padding:15px; box-sizing:border-box; }
-.journal-menu ul { list-style:none; padding:0; margin:0; }
-.journal-menu li { margin-bottom:12px; }
-.journal-menu a { text-decoration:none; color:#333; font-weight:600; display:block; padding:8px; border-radius:6px; transition:background .15s; }
-.journal-menu a:hover { background:#e9ecef; }
-.journal-container { flex:1; overflow-x:auto; }
-.error-box { color:#a00; background:#fff0f0; padding:10px; border:1px solid #f5c2c2; border-radius:6px; margin-bottom:12px; }
-.journal-table { width:100%; border-collapse:collapse; }
-.journal-table th, .journal-table td { border:1px solid #ddd; padding:8px; text-align:left; }
-.journal-table th { background:#f4f6f8; }
-</style>
-
 <h2>Trading Journal</h2>
 
 <div class="journal-layout">
     <!-- Left-hand menu -->
-    <aside class="journal-menu">
-        <ul>
-            <li><a href="?page=journal&action=add_sample">➕ Add Sample Data</a></li>
-            <li><a href="?page=journal&action=add_new">📝 Add New Entry</a></li>
-            <li><a href="?page=journal&action=select_fields">⚙️ Select Fields</a></li>
-            <li><a href="logout.php">🚪 Logout</a></li>
-        </ul>
-    </aside>
+   <div class="journal-menu-wrapper">
+    <button id="toggle-menu">☰ Menu</button>
+    
+        <aside class="journal-menu">
+            <ul>
+                <li><a href="?page=journal&action=add_sample">➕ Add Sample Data</a></li>
+                <li><a href="?page=journal&action=add_new">📝 Add New Entry</a></li>
+                <li><a href="?page=journal&action=select_fields">⚙️ Select Fields</a></li>
+            </ul>
+        </aside>
+    </div>
 
     <!-- Right-hand journal content -->
     <div class="journal-container">

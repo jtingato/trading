@@ -71,49 +71,6 @@
     }
     
     /* =====================
-       Trading Journal Styles
-       ===================== */
-    .journal-container {
-        overflow-x: auto;
-    }
-    
-    .journal-table {
-        width: 100%;
-        border-collapse: collapse;
-    }
-    
-    .journal-table th,
-    .journal-table td {
-        border: 1px solid #ccc;
-        padding: 8px;
-        text-align: left;
-    }
-    
-    .journal-table th {
-        background-color: #f0f0f0;
-    }
-    
-    /* Alternating row colors */
-    .journal-table tr:nth-child(even) {
-        background-color: #fafafa;
-    }
-    
-    /* Hover effect */
-    .journal-table tr:hover {
-        background-color: #f1f7ff;
-    }
-    
-    /* Profit/Loss highlighting */
-    td.profit {
-        color: green;
-        font-weight: bold;
-    }
-    td.loss {
-        color: red;
-        font-weight: bold;
-    }
-    
-    /* =====================
        Responsive Design
        ===================== */
     @media (max-width: 768px) {
