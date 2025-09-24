@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <title>Monarch Trading Journal</title>
     <link rel="stylesheet" href="css/style.css">
-    <link rel="stylesheet" href="css/journal.css?v=4">
+    <link rel="stylesheet" href="css/journal.css?v=5">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
 
 </head>

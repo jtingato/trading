@@ -74,11 +74,12 @@ try {
 
 <h2>Trading Journal</h2>
 
+<!-- Left-hand menu -->
 <div class="journal-layout">
-    <!-- Left-hand menu -->
-   <div class="journal-menu-wrapper">
+    <div class="journal-menu-wrapper">
         <button id="toggleMenu">
-            <span class="icon">☰</span> Menu
+            <span class="icon">☰</span> 
+            <span class="label">Menu</span>
         </button>
 
         <aside class="journal-menu">
@@ -90,18 +91,20 @@ try {
         </aside>
     </div>
 
-<script>
-    document.addEventListener('DOMContentLoaded', function () {
-        const toggleBtn = document.getElementById('toggleMenu');
-        const menu = document.querySelector('.journal-menu');
+    <script>
+        document.addEventListener('DOMContentLoaded', function () {
+            const toggleBtn = document.getElementById('toggleMenu');
+            const menu = document.querySelector('.journal-menu');
+            const layout = document.querySelector('.journal-layout');
 
-        toggleBtn.addEventListener('click', function () {
+            toggleBtn.addEventListener('click', function () {
             menu.classList.toggle('collapsed');
-            toggleBtn.classList.toggle('active');
+            toggleBtn.classList.toggle('collapsed');
+            layout.classList.toggle('collapsed');
+            });
         });
-    });
-</script>
 
+    </script>
 
     <!-- Right-hand journal content -->
     <div class="journal-container">
