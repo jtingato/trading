@@ -72,39 +72,37 @@ try {
 }
 ?>
 
-<h2>Trading Journal</h2>
-
-<!-- Left-hand menu -->
-<div class="journal-layout">
-    <div class="journal-menu-wrapper">
-        <button id="toggleMenu">
+<h2 style="display: flex; align-items: center; gap: 12px;">
+    Trading Journal
+    <button id="toggleMenu">
             <span class="icon">☰</span> 
             <span class="label">Menu</span>
         </button>
+</h2>
 
-        <aside class="journal-menu">
+<!-- Slide over Menu-->
+<aside class="journal-menu">
             <ul>
                 <li><a href="?page=journal&action=add_sample"><i class="fas fa-database"></i> Add Sample Data</a></li>
                 <li><a href="?page=journal&action=add_new"><i class="fas fa-pen"></i> Add New Entry</a></li>
                 <li><a href="?page=journal&action=select_fields"><i class="fas fa-sliders-h"></i> Select Fields</a></li>
             </ul>
         </aside>
-    </div>
 
-    <script>
-        document.addEventListener('DOMContentLoaded', function () {
-            const toggleBtn = document.getElementById('toggleMenu');
-            const menu = document.querySelector('.journal-menu');
-            const layout = document.querySelector('.journal-layout');
 
-            toggleBtn.addEventListener('click', function () {
-            menu.classList.toggle('collapsed');
-            toggleBtn.classList.toggle('collapsed');
-            layout.classList.toggle('collapsed');
-            });
-        });
+<div class="journal-layout">
+    
+<script>
+document.addEventListener('DOMContentLoaded', function () {
+  const toggleBtn = document.getElementById('toggleMenu');
+  const menu = document.querySelector('.journal-menu');
 
-    </script>
+  toggleBtn.addEventListener('click', function () {
+    menu.classList.toggle('open');
+    toggleBtn.classList.toggle('open');
+  });
+});
+</script>
 
     <!-- Right-hand journal content -->
     <div class="journal-container">
