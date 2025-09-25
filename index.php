@@ -3,8 +3,9 @@
 <head>
     <meta charset="UTF-8">
     <title>Monarch Trading Journal</title>
-    <link rel="stylesheet" href="css/style.css">
-    <link rel="stylesheet" href="css/journal.css?v=6">
+    <link rel="stylesheet" href="css/style.css?v=1">
+    <link rel="stylesheet" href="css/side_menu.css?v=1">
+    <link rel="stylesheet" href="css/journal.css?v=7">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
 
 </head>
@@ -13,7 +14,7 @@
         <img class=logo src="assets/monarch_logo.png" alt="Monarch Traders Logo" class="logo">
         <nav>
             <ul>
-                <li><a href="index.php?page=home">Home</a></li>
+                <li><a href="index.php?page=side_menu">Side Menu</a></li>
                 <li><a href="index.php?page=journal">Journal</a></li>
             </ul>
         </nav>

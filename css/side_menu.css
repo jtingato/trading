@@ -1,0 +1,75 @@
+/* Reset and base styles */
+      * {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+      }
+
+      /* Secondary Menu */
+      #menubar {
+        margin:  30px 0px 0px 0px;
+      }
+      
+      /* Main container using Flexbox */
+      .container {
+        display: flex;
+        border: 2px solid #007bff;
+        min-height: calc(100vh - 60px); /* Adjust for header height */
+        width: 100%;
+      }
+      
+      /* Sidebar styling */
+      .sidebar {
+        width: 140px;
+        padding: 20px;
+        margin:10;
+        transition: transform 0.3s ease; /* Smooth transition for collapse */
+        overflow: hidden;
+      }
+      
+      /* Hide sidebar when collapsed */
+      .sidebar.collapsed {
+        transform: translateX(-100%);
+        width: 0;
+        margin: 0;
+        padding: 0;
+      }
+      
+      /* Content area that takes up remaining space */
+      .content {
+        flex-grow: 1; /* Takes up all available space */
+        background-color: #fff;
+        padding: 20px;
+        overflow-y: auto;
+      }
+      
+      /* Optional: Add a button to toggle the sidebar */
+      #toggleSidebar {
+        padding: 10px;
+        margin-bottom: 10px;
+        cursor: pointer;
+      }   
+
+      aside ul {
+        list-style: none;
+        padding: 0;
+        margin: 0;
+      }
+      
+      aside li {
+        margin-bottom: 16px; /* spacing between items */
+      }
+      
+      aside a {
+        font-size: 12px;      /* adjust font size */
+        line-height: 1.4;     /* vertical spacing within each item */
+        text-decoration: none;
+        color: #333;
+        display: flex;
+        align-items: center;
+        gap: 8px;             /* spacing between icon and text */
+      }
+      
+      aside a:hover {
+        color: #0077cc;
+      }

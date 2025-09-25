@@ -6,12 +6,12 @@
         align-items: center;
         justify-content: space-between;
         padding: 10px 20px;
-        background-color: #f8f8f8;
-        min-height: 160px; /* ensure enough space for the logo */
+        background-color: #062c48;
+        min-height: 120px; /* ensure enough space for the logo */
     }
     
     .logo {
-        max-height: 150px;
+        max-height: 120px;
         height: auto;
         width: auto;
         margin-right: 20px;
@@ -41,7 +41,7 @@
     
     nav ul li a {
         text-decoration: none;
-        color: #333;
+        color: #988904;
         font-size: 1.1em;
         font-weight: 500;
     }
@@ -61,7 +61,7 @@
        Main Content
        ===================== */
     main {
-        padding: 20px;
+        padding: 0px;
         min-height: 80vh;
     }
     
