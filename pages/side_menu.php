@@ -14,7 +14,7 @@
     </aside>
   </div>
   <div class="content">
-    <p>This content takes up the remaining space and adjusts dynamically.</p>
+    <p>This content takes up the remaining space and adjusts dynamically.This content takes up the remaining space and adjusts dynamically.This content takes up the remaining space and adjusts dynamically.This content takes up the remaining space and adjusts dynamically.This content takes up the remaining space and adjusts dynamically.This content takes up the remaining space and adjusts dynamically.</p>
   </div>
 </main>
 </body>
