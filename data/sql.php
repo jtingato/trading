@@ -7,6 +7,7 @@ function syncDisplayableFields($pdo) {
     }
 
     $tableExists = $stmt->fetchColumn();
+    // Check if trading_journal table exists
     if (!$tableExists) {
         throw new Exception("Table 'trading_journal' does not exist.");
     }
@@ -43,6 +44,10 @@ function syncDisplayableFields($pdo) {
     return $columns;
 }
 
+function getFieldNames($pdo, $tableName) {
+    return null;
+}
+
 function tableExists($name, $pdo) {
     return (bool) $pdo->query("SELECT name FROM sqlite_master WHERE type='table' AND name='{$name}'")->fetchColumn();
 }
@@ -63,7 +68,7 @@ function getDisplayableJournalFields($pdo, $userId) {
 }  
 
 function insertSampleData($pdo) {
-    $query = $pdo->prepare ("
+    $stmt = $pdo->prepare ("
     INSERT INTO trading_journal (order_id, symbol, asset_type, side, quantity, strike_price, pos_effect, price_per_unit, exec_time, option_expiration_date, broker, notes, strategy)
     VALUES
     (1001, 'AAPL', 'stock', 'buy', 50, NULL, NULL, 175.25, '2025-09-01 09:30:00', NULL, 'Schwab', 'Long-term hold', 'Growth'),

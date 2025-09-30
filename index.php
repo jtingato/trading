@@ -1,16 +1,26 @@
+<?php 
+
+define('BASE_PATH', __DIR__);
+require_once BASE_PATH . "/navigation_router.php";
+$navigationRouter = new NavigationRouter();
+?>
+
+
 <!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
     <title>Monarch Trading Journal</title>
     <link rel="stylesheet" href="css/style.css?v=1">
-    <link rel="stylesheet" href="css/journal.css?v=1">
+    <link rel="stylesheet" href="pages/journal/journal.css?v=1">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
 
 </head>
 <body>
     <header>
+        <a href="index.php?page=home">
         <img class=logo src="assets/monarch_logo.png" alt="Monarch Traders Logo" class="logo">
+        </a>
         <nav>
             <ul>
                 <li><a href="index.php?page=side_menu">Side Menu</a></li>
@@ -22,13 +32,7 @@
     <main>
         <?php
         $page = $_GET['page'] ?? 'home';
-
-        $file = "pages/$page.php";
-        if (file_exists($file)) {
-            include $file;
-        } else {
-            echo "<h2>404 Page not found</h2>";
-        }
+        $navigationRouter->includePage($page);
         ?>
     </main>
 

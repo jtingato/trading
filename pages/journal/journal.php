@@ -1,8 +1,11 @@
 <?php
-require_once __DIR__ . '/../data/sql.php';
+$navigationRouter = new NavigationRouter();
+
+// Require sql.php 
+require_once $navigationRouter->getFilePath('sql');
 
 // Path to the SQLite database
-$dbPath = __DIR__ . '/../data/monarch.db';
+$dbPath = $navigationRouter->getFilePath('database');
 
 // Initialize variables
 $rows = [];
