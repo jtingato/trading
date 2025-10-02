@@ -30,6 +30,26 @@ class NavigationRouter {
 
         return isset($routes[$pageName]) ? BASE_PATH . $routes[$pageName] : null;
     }
+
+	function findMonarchBase($startDir = __DIR__): ?string {
+		$current = realpath($startDir);
+	
+		while ($current !== false) {
+			if (basename($current) === 'monarch') {
+				return $current;
+			}
+	
+			$parent = dirname($current);
+			if ($parent === $current) {
+				// Reached filesystem root
+				break;
+			}
+	
+			$current = $parent;
+		}
+	
+		return null; // "Monarch" not found
+	}
 }
 
 ?>
