@@ -1,7 +1,6 @@
 <?php 
 
-define('BASE_PATH', __DIR__);
-require_once BASE_PATH . "/navigation_router.php";
+require_once __DIR__ . "/navigation_router.php";
 $navigationRouter = new NavigationRouter();
 ?>
 
@@ -31,8 +30,9 @@ $navigationRouter = new NavigationRouter();
 
     <main>
         <?php
-        $page = $_GET['page'] ?? 'home';
-        $navigationRouter->includePage($page);
+        $page = $_GET['page'] . ".php" ?? 'home.php';
+        //$navigationRouter->includePage($page);
+        include $navigationRouter->pathForFileNamed($page);
         ?>
     </main>
 

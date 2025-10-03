@@ -2,10 +2,10 @@
 $navigationRouter = new NavigationRouter();
 
 // Require sql.php 
-require_once $navigationRouter->getFilePath('sql');
+require_once $navigationRouter->pathForFileNamed('sql.php');
 
 // Path to the SQLite database
-$dbPath = $navigationRouter->getFilePath('database');
+$dbPath = $navigationRouter->pathForFileNamed('monarch.db');
 
 // Initialize variables
 $rows = [];

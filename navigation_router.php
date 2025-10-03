@@ -2,40 +2,21 @@
 <?php
 
 class NavigationRouter {
-	function includePage($page) {
-		$path = $this->pathForItem($page);
-		if (file_exists($path)) {
-			include $path;
-		} else {
-			include BASE_PATH . '/pages/404.php';
-		}
+	public readonly string $rootDir;
+	public function __constuct(string $rootDir) {
+		$this->rootDir = $rootDir;
 	}
 
-	function getFilePath($file) {
-		$path = $this->pathForItem($file);
-		if (file_exists($path)) {
-			return $path;
-		} else {
-			echo "<h2>404 Page not found</h2>";
-		}
+	function pathForFileNamed($name){
+		$siteBaseDir = $this->findMonarchBase();
+		return $this->findFileRecursive($siteBaseDir, $name);
 	}
 
-	private function pathForItem($pageName) {
-        $routes = [
-            'home'    => '/pages/home.php',
-            'journal' => '/pages/journal/journal.php',
-            'sql'     => '/data/sql.php',
-            'database'=> '/data/monarch.db', // maybe not include directly?
-        ];
-
-        return isset($routes[$pageName]) ? BASE_PATH . $routes[$pageName] : null;
-    }
-
-	function findMonarchBase($startDir = __DIR__): ?string {
+	function findMonarchBase($startDir = __DIR__, $rootFolderName = 'monarch'): ?string {
 		$current = realpath($startDir);
 	
 		while ($current !== false) {
-			if (basename($current) === 'monarch') {
+			if (basename($current) === $rootFolderName) {
 				return $current;
 			}
 	
@@ -50,6 +31,22 @@ class NavigationRouter {
 	
 		return null; // "Monarch" not found
 	}
+
+	function findFileRecursive (string $rootDir, string $targetFile): ?string {
+    	$iterator = new RecursiveIteratorIterator (
+        	new RecursiveDirectoryIterator( $rootDir, FilesystemIterator::SKIP_DOTS),
+        	RecursiveIteratorIterator::SELF_FIRST
+    	);
+
+		foreach ($iterator as $file) {
+			if ($file->isFile() && $file->getFilename() === $targetFile) {
+				return $file->getPathname(); // Full path to the file
+			}
+		}
+
+    	return null; // File not found
+	}
 }
+
 
 ?>
