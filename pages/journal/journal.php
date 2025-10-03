@@ -80,81 +80,16 @@ try {
 <div class="journal-layout">
     <!-- Right-hand journal content -->
     <div class="journal-container">
-        <?php if (!empty($errorMsg)): ?>
-            <div class="error-box"><?php echo $errorMsg; ?></div>
-        <?php endif; ?>
+        <?php 
+        if (!empty($errorMsg)):
+            echo "<div class='error-box'> $errorMsg; ?></div>";
+        endif;
 
-        <?php if ($action === 'select_fields'): ?>
-            <h3>Select Displayable Fields</h3>
-            <form method="post" action="?page=journal&action=save_fields">
-                <ul class='field-selection-list'>
-                    <?php foreach ($columns as $field): ?>
-                        <li>
-                            <label>
-                                <input type="checkbox" name="fields[]" value="<?php echo htmlspecialchars($field); ?>"
-                                    <?php echo in_array($field, $displayableFields) ? 'checked' : ''; ?>>
-                                    <span class="field-label"><?php echo htmlspecialchars($field); ?></span>
-                            </label>
-                        </li>
-                    <?php endforeach; ?>
-                </ul>
-                <button type="submit">Save Selection</button>
-            </form>
-        <?php else: ?>
-            <table id="journalTable" class="journal-table">
-                <thead>
-                    <tr>
-                        <?php
-                        $visibleCols = !empty($displayableFields) ? $displayableFields : $columns;
-                        foreach ($visibleCols as $col) {
-                            echo "<th draggable=true>" . htmlspecialchars($col) . "</th>";
-                        }
-                        ?>
-                    </tr>
-                </thead>
-                <tbody>
-                    <?php
-                    if (!empty($rows)) {
-                        foreach ($rows as $row) {
-                            echo "<tr>";
-                            foreach ($visibleCols as $colName) {
-                                $val = isset($row[$colName]) ? $row[$colName] : '';
-                                echo "<td>" . htmlspecialchars($val) . "</td>";
-                            }
-                            echo "</tr>";
-                        }
-                    } else {
-                        $colspan = max(1, count($visibleCols));
-                        echo "<tr><td colspan=\"" . $colspan . "\">No rows yet.</td></tr>";
-                    }
-                    ?>
-                </tbody>
-            </table>
-        <?php endif; ?>
+        if ($action === 'select_fields'):
+            include $navigationRouter->pathForFileNamed("journalSelectFields.php");
+        else:
+            include $navigationRouter->pathForFileNamed("journalTable.php");
+        endif; 
+    ?>
     </div>
 </div>
-
-<script>
-const table = document.getElementById('journalTable');
-const headers = table.querySelectorAll('thead th');
-
-let dragSrcIndex = null;
-
-headers.forEach((th, index) => {
-  th.addEventListener('dragstart', () => {
-    dragSrcIndex = index;
-  });
-
-  th.addEventListener('dragover', e => e.preventDefault());
-
-  th.addEventListener('drop', () => {
-    if (dragSrcIndex === null || dragSrcIndex === index) return;
-
-    const rows = table.rows;
-    for (let row of rows) {
-      const cells = row.cells;
-      row.insertBefore(cells[dragSrcIndex], cells[index]);
-    }
-  });
-});
-</script>
