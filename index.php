@@ -22,7 +22,6 @@ $navigationRouter = new NavigationRouter();
         </a>
         <nav>
             <ul>
-                <li><a href="index.php?page=side_menu">Side Menu</a></li>
                 <li><a href="index.php?page=journal">Journal</a></li>
             </ul>
         </nav>
@@ -31,7 +30,6 @@ $navigationRouter = new NavigationRouter();
     <main>
         <?php
         $page = $_GET['page'] . ".php" ?? 'home.php';
-        //$navigationRouter->includePage($page);
         include $navigationRouter->pathForFileNamed($page);
         ?>
     </main>
