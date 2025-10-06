@@ -6,12 +6,6 @@ function syncDisplayableFields($pdo) {
         throw new Exception("Failed to query sqlite_master.");
     }
 
-    $tableExists = $stmt->fetchColumn();
-    // Check if trading_journal table exists
-    if (!$tableExists) {
-        throw new Exception("Table 'trading_journal' does not exist.");
-    }
-
     // Step 2: Get column names
     $columns = [];
     $colStmt = $pdo->query("PRAGMA table_info(trading_journal)");
@@ -48,9 +42,9 @@ function getFieldNames($pdo, $tableName) {
     return null;
 }
 
-function tableExists($name, $pdo) {
-    return (bool) $pdo->query("SELECT name FROM sqlite_master WHERE type='table' AND name='{$name}'")->fetchColumn();
-}
+// function tableExists($name, $pdo) {
+//     return (bool) $pdo->query("SELECT name FROM sqlite_master WHERE type='table' AND name='{$name}'")->fetchColumn();
+// }
 
 function getDisplayableJournalFields($pdo, $userId) {
     $stmt = $pdo->prepare("

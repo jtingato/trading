@@ -1,8 +1,13 @@
+<?php 
+    declare(strict_types=1);
+    $viewModel = new JournalViewModel();
+?>
+
 <table id="journalTable" class="journal-table">
     <thead>
         <tr>
             <?php
-            $visibleCols = !empty($displayableFields) ? $displayableFields : $columns;
+            $visibleCols = !empty($viewModel->displayableFields) ? $viewModel->displayableFields : $viewModel->columns;
             foreach ($visibleCols as $col) {
                 echo "<th>" . htmlspecialchars($col) . "</th>";
             }
@@ -11,6 +16,7 @@
     </thead>
     <tbody>
         <?php
+        $rows = $viewModel->rows;
         if (!empty($rows)) {
             foreach ($rows as $row) {
                 echo "<tr>";

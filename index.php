@@ -1,7 +1,8 @@
 <?php 
-
-require_once __DIR__ . "/navigation_router.php";
-$navigationRouter = new NavigationRouter();
+    declare(strict_types=1);
+    require_once __DIR__ . "/NavigationRouter.php";
+    
+    $navigationRouter = new NavigationRouter();
 ?>
 
 
