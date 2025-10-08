@@ -4,35 +4,30 @@
     
     class JournalViewModel {
     
-        // Allpossible fields from the journal table
-        var $columns = ["One", "Two", "Three", "Four", "Seven"];
+        // All possible fields from the journal table
+        /** @var JournalField[] */
+        public array $journalFields = [];
         
         // The field that have been selected by the user to be displayed
         var $visibleFields = [];
         
         // The journal entries from journal_table
         var $rows = [];
+        var $columns = ["One", "Two", "Three", "Four", "Five", "Six"];
 
         var $orderedColumns = [];
         var $errorMsg = '';
+
+        var $dataManager = null;
 
         // Simulated user ID (replace with session-based ID later)
         var $currentUser = 'user_123';
 
         public function __construct() {
-            $this->visibleFields = $this->getJournalFields();
+            $this->dataManager = JournalDataManager::shared();
+            $this->visibleFields = $this->dataManager->allVisibleColumnNames();
+            $this->journalFields = $this->dataManager->getJournalFields();
         } 
-
-        function getJournalFields() {
-            $dataMan = JournalDataManager::shared();
-            $fields = $dataMan->allVisibleColumnNames();
-
-            // foreach ($columns as $column) {
-            //     $this->visibleFields[] = new JournalField()
-            // }
-
-            return $fields;
-        }
 
         function saveSelectedDisplayableFields() {
             print("saveSelectedDisplayableFields called");
@@ -40,32 +35,25 @@
 
         function updateJournalEntries() {
             $dbManager = JournalDataManager::shared();
-            
-            // // Connect to SQLite
-            // try {
-            //     if ($dbManager->tableExists('trading_journal')) {
-            //         // Sync displayable fields and get column names
-                
-            //         // Handle saving selected fields
-            //         if ($this->action === 'save_fields' && $_SERVER['REQUEST_METHOD'] === 'POST') {
+            // Finish this later
+        }
 
-            //             $this->saveSelectedDisplayableFields();
+        function updateFieldSelections() {
+             $dataMan = JournalDataManager::shared();
 
-            //             // Redirect to journal view
-            //             header("Location: ?page=journal");
-            //             exit;
-            //         }
+            if (!isset($_POST['fields']) || !is_array($_POST['fields'])) {
+                $this->errorMsg = "No fields were selected.";
+                return;
+            }
 
-            //         // Load displayable fields for select_fields view or journal view
-            //         $rows = getDisplayableJournalFields($pdo, $currentUser);
-            //     } else {
-            //         $errorMsg = "Table <strong>trading_journal</strong> does not exist in the database.";
-            //     }
-            // } catch (Exception $e) {
-            //     $errorMsg = "Error: " . htmlspecialchars($e->getMessage());
-            // } catch (PDOException $e) {
-            //     $errorMsg = "Database error: " . htmlspecialchars($e->getMessage());
-            // }
+            // // Array of field names
+            $selectedFields = $_POST['fields']; 
+
+            try {
+                $dataMan->saveVisibleJournalFields($this->currentUser, $selectedFields);
+            } catch (Exception $e) {
+                $this->errorMsg = "Failed to save field selections: " . $e->getMessage();
+            }
         }
     }
 ?>

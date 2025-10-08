@@ -7,7 +7,7 @@
     <thead>
         <tr>
             <?php
-            $visibleCols = !empty($viewModel->displayableFields) ? $viewModel->displayableFields : $viewModel->columns;
+            $visibleCols = !empty($viewModel->visibleFields) ? $viewModel->visibleFields : $viewModel->columns;
             foreach ($visibleCols as $col) {
                 echo "<th>" . htmlspecialchars($col) . "</th>";
             }

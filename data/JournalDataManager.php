@@ -73,6 +73,34 @@ class JournalDataManager extends DatabaseManager {
         return $visibleColumns;
     }
 
+    function allColumnNames(): array {
+        // Get all visible fields from displayable_journal_fields
+        $visibleStmt = $this->pdo->prepare("
+            SELECT field_name 
+            FROM visible_journal_fields 
+        ");
+        $visibleStmt->execute();
+        $visibleFields = $visibleStmt->fetchAll(PDO::FETCH_COLUMN);
+
+        if (empty($visibleFields)) {
+            return [];
+        }
+
+        // Get all actual columns from trading_journal
+        $columnsStmt = $this->pdo->prepare("PRAGMA table_info(trading_journal)");
+        $columnsStmt->execute();
+        $visibleColumns = [];
+
+        $allColumns = $this->allColumns();
+        foreach ($allColumns as $columnName) {
+            if (in_array($columnName, $visibleFields, true)) {
+                $visibleColumns[] = $columnName;
+            }
+        }
+
+        return $visibleColumns;
+    }
+
     function allVisibleColumns(): array { 
         // Get all visible fields from displayable_journal_fields 
         $visibleStmt = $this->pdo->prepare(" SELECT * FROM visible_journal_fields WHERE is_visible = 1 "); 
@@ -83,6 +111,69 @@ class JournalDataManager extends DatabaseManager {
             print("Visible fields are empty"); 
         } 
         return $visibleColumns; 
+    }
+
+     public function getJournalFields(): array {
+        $stmt = $this->pdo->prepare("
+            SELECT field_name, user_id, ordering, friendly_name, is_visible
+            FROM visible_journal_fields
+        ");
+        $stmt->execute();
+
+        $fields = [];
+        while ($row = $stmt->fetch(PDO::FETCH_ASSOC)) {
+            $fields[] = new JournalField(
+                $row['field_name'],
+                $row['user_id'],
+                isset($row['ordering']) ? (int)$row['ordering'] : null,
+                $row['friendly_name'] ?? null,
+                (bool)$row['is_visible']
+            );
+        }
+        return $fields;
+    }
+
+    public function saveVisibleJournalFields(string $userId, array $selectedFields): void {
+        if (!$userId) {
+            throw new RuntimeException("No user id has been provided");
+        }
+
+        if (empty($selectedFields)) {
+            throw new RuntimeException("No fields provided to saveVisibleJournalFields");
+        }
+
+        $this->pdo->beginTransaction();
+        try {
+            // Delete all journal fields from db
+            $this->deleteAllJournalFieldsForUser($userId);
+
+            // Insert new selections
+            $insertStmt = $this->pdo->prepare("
+                INSERT INTO visible_journal_fields (field_name, user_id, ordering, is_visible)
+                VALUES (:field_name, :user_id, :ordering, :is_visible)
+            ");
+
+            $index = 0;
+            foreach ($selectedFields as $fieldName => $isVisible) {
+                $insertStmt->execute([
+                ':field_name' => $fieldName,
+                ':user_id' => $userId,
+                ':ordering' => $index++,
+                ':is_visible' => $isVisible
+                ]);
+            }
+            $this->pdo->commit(); 
+        } catch (PDOException $e) {
+            error_log("Insert failed: " . $e->getMessage());
+        }
+    }
+
+    public function deleteAllJournalFieldsForUser(string $userId) {
+        $stmt = $this->pdo->prepare("
+            DELETE FROM visible_journal_fields
+            WHERE user_id = :user_id
+        ");
+        $stmt->execute([':user_id' => $userId]);
     }
 }
 ?>
