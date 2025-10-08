@@ -31,8 +31,58 @@ class JournalDataManager extends DatabaseManager {
         return parent::tableExists($name);
     }
 
-    public function allColumns() {
-        $headerQuery = "SELECT";
+    function allColumns(): array {
+        $stmt = $this->pdo->prepare("PRAGMA table_info(trading_journal)");
+        $stmt->execute();
+        $columns = [];
+
+        while ($row = $stmt->fetch(PDO::FETCH_ASSOC)) {
+            if (isset($row['name'])) {
+                $columns[] = $row['name'];
+            }
+        }
+        return $columns;
+    }   
+
+    function allVisibleColumnNames(): array {
+        // Get all visible fields from displayable_journal_fields
+        $visibleStmt = $this->pdo->prepare("
+            SELECT field_name 
+            FROM visible_journal_fields 
+            WHERE is_visible = 1
+        ");
+        $visibleStmt->execute();
+        $visibleFields = $visibleStmt->fetchAll(PDO::FETCH_COLUMN);
+
+        if (empty($visibleFields)) {
+            return [];
+        }
+
+        // Get all actual columns from trading_journal
+        $columnsStmt = $this->pdo->prepare("PRAGMA table_info(trading_journal)");
+        $columnsStmt->execute();
+        $visibleColumns = [];
+
+        $allColumns = $this->allColumns();
+        foreach ($allColumns as $columnName) {
+            if (in_array($columnName, $visibleFields, true)) {
+                $visibleColumns[] = $columnName;
+            }
+        }
+
+        return $visibleColumns;
+    }
+
+    function allVisibleColumns(): array { 
+        // Get all visible fields from displayable_journal_fields 
+        $visibleStmt = $this->pdo->prepare(" SELECT * FROM visible_journal_fields WHERE is_visible = 1 "); 
+        $visibleStmt->execute(); 
+        $visibleColumns = $visibleStmt->fetchAll();
+
+        if (empty($visibleColumns)) { 
+            print("Visible fields are empty"); 
+        } 
+        return $visibleColumns; 
     }
 }
 ?>

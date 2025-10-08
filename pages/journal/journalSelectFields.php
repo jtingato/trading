@@ -6,11 +6,11 @@
 <h3>Select Displayable Fields</h3>
     <form method="post" action="?page=journal&action=save_fields">
         <ul class='field-selection-list'>
-            <?php foreach ($viewModel->columns as $field): ?>
+            <?php foreach ($viewModel->visibleFields as $field): ?>
                 <li>
                     <label>
                         <input type="checkbox" name="fields[]" value="<?php echo htmlspecialchars($field); ?>"
-                            <?php echo in_array($field, $viewModel->displayableFields) ? 'checked' : ''; ?>>
+                            <?php echo in_array($field, $viewModel->visibleFields) ? 'checked' : ''; ?>>
                             <span class="field-label"><?php echo htmlspecialchars($field); ?></span>
                     </label>
                 </li>
@@ -19,11 +19,3 @@
         <button type="submit">Save Selection</button>
     </form>
 
-<?php
-    $action = $_GET['action'] ?? '';
-    if ($action === 'save_fields' && $_SERVER['REQUEST_METHOD'] === 'POST') {
-        // Redirect to journal view
-        header("Location: ?page=journal");
-        exit;
-    }
-?>

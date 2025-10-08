@@ -5,10 +5,10 @@
     class JournalViewModel {
     
         // Allpossible fields from the journal table
-        var $columns = ["One", "Two", "Three", "Four", "Five"];
+        var $columns = ["One", "Two", "Three", "Four", "Seven"];
         
         // The field that have been selected by the user to be displayed
-        var $displayableFields = ["One", "Two", "Three", "Four", "Five"];
+        var $visibleFields = [];
         
         // The journal entries from journal_table
         var $rows = [];
@@ -18,6 +18,21 @@
 
         // Simulated user ID (replace with session-based ID later)
         var $currentUser = 'user_123';
+
+        public function __construct() {
+            $this->visibleFields = $this->getJournalFields();
+        } 
+
+        function getJournalFields() {
+            $dataMan = JournalDataManager::shared();
+            $fields = $dataMan->allVisibleColumnNames();
+
+            // foreach ($columns as $column) {
+            //     $this->visibleFields[] = new JournalField()
+            // }
+
+            return $fields;
+        }
 
         function saveSelectedDisplayableFields() {
             print("saveSelectedDisplayableFields called");

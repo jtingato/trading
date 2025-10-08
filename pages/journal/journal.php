@@ -25,15 +25,19 @@
     <!-- Right-hand journal content -->
     <div class="journal-container">
         <?php 
-        if (!empty($viewModel->errorMsg)):
-            echo "<div class='error-box'> $viewModel->errorMsg; ?></div>";
-        endif;
+            if (!empty($viewModel->errorMsg)):
+                echo "<div class='error-box'> $viewModel->errorMsg; ?></div>";
+            endif;
 
-        if ($action === 'select_fields'):
-            include $navigationRouter->pathForFileNamed("journalSelectFields.php");
-        else:
-            include $navigationRouter->pathForFileNamed("journalTable.php");
-        endif; 
-    ?>
+            if ($action === 'select_fields'):
+                include $navigationRouter->pathForFileNamed("journalSelectFields.php");
+            elseif($action === 'save_fields'):
+                // Redirect to journal view
+                header("Location: ?page=journal");
+                exit;
+            else:
+                include $navigationRouter->pathForFileNamed("journalTable.php");
+            endif; 
+        ?>
     </div>
 </div>
