@@ -1,6 +1,7 @@
 <?php 
     declare(strict_types=1);
     require_once $navigationRouter->pathForFileNamed('journalViewModel.php');
+    require_once $navigationRouter->pathForFileNamed('JournalField.php');
 
     // $viewModel = new NavigationRouter()->pathForFileNamed("journalViewModel.php")
     $viewModel = new JournalViewModel();

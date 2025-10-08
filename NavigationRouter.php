@@ -14,7 +14,7 @@
 			return $this->findFileRecursive($siteBaseDir, $name);
 		}
 
-		private function findMonarchBase($startDir = __DIR__, $rootFolderName = 'monarch'): ?string {
+		public function findMonarchBase($startDir = __DIR__, $rootFolderName = 'monarch'): ?string {
 			$current = realpath($startDir);
 		
 			while ($current !== false) {
@@ -36,9 +36,11 @@
 
 		private function findFileRecursive (string $rootDir, string $targetFile): ?string {
 			$iterator = new RecursiveIteratorIterator (
-				new RecursiveDirectoryIterator( $rootDir, FilesystemIterator::SKIP_DOTS),
-				RecursiveIteratorIterator::SELF_FIRST
-			);
+				new RecursiveDirectoryIterator(
+					 $rootDir, 
+					 FilesystemIterator::SKIP_DOTS), 
+					 RecursiveIteratorIterator::SELF_FIRST
+				);
 
 			foreach ($iterator as $file) {
 				if ($file->isFile() && $file->getFilename() === $targetFile) {

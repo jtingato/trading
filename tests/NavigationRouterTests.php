@@ -6,7 +6,7 @@
 declare(strict_types=1);
 use PHPUnit\Framework\TestCase;
 
-require dirname(__DIR__) . "/navigation_router.php";
+require dirname(__DIR__) . "/NavigationRouter.php";
 final class NavigationRouterTests extends TestCase {
 
 	public function testFindBaseUsingDefaultRootFolderName() {
@@ -43,6 +43,8 @@ final class NavigationRouterTests extends TestCase {
 
 	public function testFindBaseUsingIncorrectDefaultRootFolderName() {
 		$router = new NavigationRouter();
+
+		// NOTE: this assumes that this test file is only one level up from the root directory
 		$expectedResult = dirname(__DIR__);
 		echo "\n🛑 Expected path: " . $expectedResult . "\n";
 
@@ -56,11 +58,13 @@ final class NavigationRouterTests extends TestCase {
 	}
 
 	public function testPathForFileNamed() {
+		// Capitalization matters here.  Test values MUST match exactly to the file name and path folders.
 		$router = new NavigationRouter();
 		$testFiles = [
 			"index.php" => "/Users/johningato/Sites/monarch/index.php",	
 			"journal.css" => "/Users/johningato/Sites/monarch/pages/journal/journal.css",	
-			"sql.php" => "/Users/johningato/Sites/monarch/data/sql.php"
+			"sql.php" => "/Users/johningato/Sites/monarch/data/sql.php",
+			"JournalField.php" =>  "/Users/johningato/Sites/monarch/data/Models/JournalField.php"
 		];
 
 		forEach($testFiles as $key => $value) {
