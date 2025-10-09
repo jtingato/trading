@@ -40,5 +40,15 @@
         public function isVisible(): bool {
             return $this->isVisible;
         }
+
+        public function toArray(): array {
+            return [
+                'field_name' => $this->fieldName,
+                'user_id' => $this->userId,
+                'ordering' => $this->ordering,
+                'friendly_name' => $this->friendlyName,
+                'is_visible' => $this->isVisible ? 1 : 0
+            ];
+        }
     }
 ?>
