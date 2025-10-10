@@ -7,8 +7,8 @@
         public bool $isVisible;
 
         public function __construct(
-            string $name,
-            string $user_id,
+            string $name = "",
+            string $user_id = "",
             ?int $ordering = null,
             ?string $friendly_name = null,
             bool $isVisible = true
@@ -18,6 +18,15 @@
             $this->ordering = $ordering;
             $this->friendlyName = $friendly_name;
             $this->isVisible = $isVisible;
+        }
+
+        public static function journalFieldWith(array $data) {
+            $newJF = new JournalField("", "", "","","");
+            $newJF->fieldName = $data['name'];
+            $newJF->userId = $data['user_id'];
+            $newJF->ordering = $data['ordering'];
+            $newJF->friendlyName = $data['friendly_name'];
+            $newJF->isVisible = $data['isVisible'];
         }
 
         // Optional: Add getters if you want encapsulation
@@ -50,5 +59,11 @@
                 'is_visible' => $this->isVisible ? 1 : 0
             ];
         }
+
+        // public function createStatement() {
+        //     $query = "SELECT sql FROM sqlite_master WHERE type='table' AND name='trading_journal'";
+        //     $createStmt = JournalDataManager::shared().executeS
+
+        // }
     }
 ?>

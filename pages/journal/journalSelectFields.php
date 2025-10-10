@@ -10,14 +10,19 @@
         <?php foreach ($viewModel->journalFields as $field): ?>
             <li>
                 <label>
-                    <!-- Hidden input to ensure field is submitted even if unchecked -->
-                    <input type="hidden" name="fields[<?php echo htmlspecialchars($field->fieldName); ?>]" value="0">
-                    
-                    <!-- Checkbox overrides hidden input if checked -->
-                    <input type="checkbox" name="fields[<?php echo htmlspecialchars($field->fieldName); ?>]" value="1"
+                    <!-- Hidden input for visibility fallback -->
+                    <input type="hidden" name="fields[<?php echo htmlspecialchars($field->fieldName); ?>][isVisible]" value="0">
+
+                    <!-- Checkbox for visibility -->
+                    <input type="checkbox" name="fields[<?php echo htmlspecialchars($field->fieldName); ?>][isVisible]" value="1"
                         <?php echo $field->isVisible ? 'checked' : ''; ?>>
-                    
-                    <span class="field-label"><?php echo htmlspecialchars($field->friendlyName ?? $field->fieldName); ?></span>
+
+                    <!-- Editable friendly name -->
+                    <input type="text" name="fields[<?php echo htmlspecialchars($field->fieldName); ?>][friendlyName]"
+                        value="<?php echo htmlspecialchars($field->friendlyName ?? $field->fieldName); ?>"
+                        class="friendly-name-input">
+
+                    <span class="field-label">(<?php echo htmlspecialchars($field->fieldName); ?>)</span>
                 </label>
             </li>
         <?php endforeach; ?>

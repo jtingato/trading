@@ -13,9 +13,6 @@
         
         // The journal entries from journal_table
         var $rows = [];
-        var $columns = ["One", "Two", "Three", "Four", "Five", "Six"];
-
-        var $orderedColumns = [];
         var $errorMsg = '';
 
         var $dataManager = null;
@@ -47,14 +44,47 @@
             }
 
             // // Array of field names
-            $selectedFields = $_POST['fields']; 
+            $submittedFields = $_POST['fields'] ?? [];
+
+            // Converted POST[] into JournalField objects
+            $fieldObjects = [];
 
             try {
-                $dataMan->saveVisibleJournalFields($this->currentUser, $selectedFields);
+                $orderingCount = 0;
+                foreach ($submittedFields as $fieldId => $properties) {
+                    
+                    $thisField = $this->findJournalField($fieldId);
+
+                    if($thisField === null) { continue; }
+                    
+                    $thisField->fieldName       = $fieldId;
+                    $thisField->userId          = $this->currentUser;
+                    $thisField->ordering        = ++$orderingCount; // ordering by array position
+                    $thisField->friendlyName    = $properties['friendlyName'];
+                    $thisField->isVisible       = isset($properties['isVisible']) && (int)$properties['isVisible'] === 1;
+                } 
             } catch (Exception $e) {
-                $this->errorMsg = "Failed to save field selections: " . $e->getMessage();
+                $this->errorMsg = "Failed to save field selection {$fieldId}: " . $e->getMessage();
+            }
+        
+
+            try {
+                $dataMan->saveVisibleJournalFields($this->currentUser, $this->journalFields);
+            } catch (Throwable $e) {
+                $this->errorMsg = "Failed to save field selections: " . get_class($e) . " - " . $e->getMessage();
+                print($this->errorMsg);
             }
         }
+
+        private function findJournalField(string $fieldId): ?JournalField {
+            foreach ($this->journalFields as $field) {
+                if ($field->fieldName === $fieldId) {
+                    return $field;
+                }
+            }
+            return null;
+        }
+
     }
 ?>
 

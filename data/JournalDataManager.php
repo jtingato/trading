@@ -133,14 +133,14 @@ class JournalDataManager extends DatabaseManager {
         return $fields;
     }
 
-    public function saveVisibleJournalFields(string $userId, array $selectedFields): void {
+    public function saveVisibleJournalFields(string $userId, array $fields): void {        
         if (!$userId) {
             throw new RuntimeException("No user id has been provided");
         }
 
-        if (empty($selectedFields)) {
+        if (empty($fields)) {
             throw new RuntimeException("No fields provided to saveVisibleJournalFields");
-        }
+        }        
 
         $this->pdo->beginTransaction();
         try {
@@ -149,22 +149,24 @@ class JournalDataManager extends DatabaseManager {
 
             // Insert new selections
             $insertStmt = $this->pdo->prepare("
-                INSERT INTO visible_journal_fields (field_name, user_id, ordering, is_visible)
-                VALUES (:field_name, :user_id, :ordering, :is_visible)
+                INSERT INTO visible_journal_fields (field_name, user_id, friendly_name, ordering, is_visible)
+                VALUES (:field_name, :user_id, :friendly_name, :ordering, :is_visible)
             ");
 
             $index = 0;
-            foreach ($selectedFields as $fieldName => $isVisible) {
+            foreach ($fields as $field) {
                 $insertStmt->execute([
-                ':field_name' => $fieldName,
-                ':user_id' => $userId,
-                ':ordering' => $index++,
-                ':is_visible' => $isVisible
+                ':field_name'       => $field->fieldName,
+                ':user_id'          => $field->userId,
+                ':friendly_name'    => $field->friendlyName,
+                ':ordering'         => $field->ordering,
+                ':is_visible'       => $field->isVisible ? 1 : 0
                 ]);
             }
             $this->pdo->commit(); 
         } catch (PDOException $e) {
-            error_log("Insert failed: " . $e->getMessage());
+            $this->pdo->rollBack();
+            throw new RuntimeException("Failed to save journal fields: " . $e->getMessage());
         }
     }
 

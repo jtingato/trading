@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-abstract class DatabaseManager {
+class DatabaseManager {
     private $navRouter;
 
     public readonly string $dbname;
@@ -34,5 +34,11 @@ abstract class DatabaseManager {
             "SELECT name FROM sqlite_master WHERE type='table' AND name='{$name}'"
         );
         return (bool) $stmt->fetchColumn();
+    }
+
+    public function executeSql($sql) {
+        $stmt = $this->getPDO()->query(
+            $sql
+        );
     }
 }

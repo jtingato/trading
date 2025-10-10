@@ -7,9 +7,9 @@
     <thead>
         <tr>
             <?php
-            $visibleCols = !empty($viewModel->visibleFields) ? $viewModel->visibleFields : $viewModel->columns;
-            foreach ($visibleCols as $col) {
-                echo "<th>" . htmlspecialchars($col) . "</th>";
+            $columnHeaderName = $viewModel->visibleFields;
+            foreach ($columnHeaderName as $columnName) {
+                echo "<th>" . htmlspecialchars($columnName) . "</th>";
             }
             ?>
         </tr>
@@ -20,14 +20,14 @@
         if (!empty($rows)) {
             foreach ($rows as $row) {
                 echo "<tr>";
-                foreach ($visibleCols as $colName) {
-                    $val = isset($row[$colName]) ? $row[$colName] : '';
-                    echo "<td>" . htmlspecialchars($val) . "</td>";
+                foreach ($columnHeaderName as $columnName) {
+                    $value = isset($row[$columnName]) ? $row[$columnName] : '';
+                    echo "<td>" . htmlspecialchars($value) . "</td>";
                 }
                 echo "</tr>";
             }
         } else {
-            $colspan = max(1, count($visibleCols));
+            $colspan = max(1, count($columnHeaderName));
             echo "<tr><td colspan=\"" . $colspan . "\">No rows yet.</td></tr>";
         }
         ?>
