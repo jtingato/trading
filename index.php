@@ -34,8 +34,12 @@
 
     <main>
         <?php
-        $page = $_GET['page'] . ".php" ?? 'home.php';
-        include $navigationRouter->pathForFileNamed($page);
+        if (!isset($_GET['page'])) {
+            include $navigationRouter->pathForFileNamed('home.php');
+        } else {
+            $page = $_GET['page'] . ".php" ?? 'home.php';
+            include $navigationRouter->pathForFileNamed($page);
+        }
         ?>
     </main>
 
