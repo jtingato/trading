@@ -48,7 +48,7 @@ class JournalDataManager extends DatabaseManager {
         // Get all visible fields from displayable_journal_fields
         $visibleStmt = $this->pdo->prepare("
             SELECT field_name 
-            FROM visible_journal_fields 
+            FROM journal_fields 
             WHERE is_visible = 1
         ");
         $visibleStmt->execute();
@@ -77,7 +77,7 @@ class JournalDataManager extends DatabaseManager {
         // Get all visible fields from displayable_journal_fields
         $visibleStmt = $this->pdo->prepare("
             SELECT field_name 
-            FROM visible_journal_fields 
+            FROM journal_fields 
         ");
         $visibleStmt->execute();
         $visibleFields = $visibleStmt->fetchAll(PDO::FETCH_COLUMN);
@@ -103,7 +103,7 @@ class JournalDataManager extends DatabaseManager {
 
     function allVisibleColumns(): array { 
         // Get all visible fields from displayable_journal_fields 
-        $visibleStmt = $this->pdo->prepare(" SELECT * FROM visible_journal_fields WHERE is_visible = 1 "); 
+        $visibleStmt = $this->pdo->prepare(" SELECT * FROM journal_fields WHERE is_visible = 1 "); 
         $visibleStmt->execute(); 
         $visibleColumns = $visibleStmt->fetchAll();
 
@@ -116,7 +116,7 @@ class JournalDataManager extends DatabaseManager {
      public function getJournalFields(): array {
         $stmt = $this->pdo->prepare("
             SELECT field_name, user_id, ordering, friendly_name, is_visible
-            FROM visible_journal_fields
+            FROM journal_fields
         ");
         $stmt->execute();
 
@@ -149,7 +149,7 @@ class JournalDataManager extends DatabaseManager {
 
             // Insert new selections
             $insertStmt = $this->pdo->prepare("
-                INSERT INTO visible_journal_fields (field_name, user_id, friendly_name, ordering, is_visible)
+                INSERT INTO journal_fields (field_name, user_id, friendly_name, ordering, is_visible)
                 VALUES (:field_name, :user_id, :friendly_name, :ordering, :is_visible)
             ");
 
@@ -172,7 +172,7 @@ class JournalDataManager extends DatabaseManager {
 
     public function deleteAllJournalFieldsForUser(string $userId) {
         $stmt = $this->pdo->prepare("
-            DELETE FROM visible_journal_fields
+            DELETE FROM journal_fields
             WHERE user_id = :user_id
         ");
         $stmt->execute([':user_id' => $userId]);
