@@ -9,10 +9,12 @@
         public array $journalFields = [];
         
         // The field that have been selected by the user to be displayed
-        var $visibleFields = [];
+        var $visibleJournalFieldNames = [];
         
         // The journal entries from journal_table
         var $rows = [];
+
+        // Error messages are save here.  Probably throe exceptions instead
         var $errorMsg = '';
 
         var $dataManager = null;
@@ -22,7 +24,7 @@
 
         public function __construct() {
             $this->dataManager = JournalDataManager::shared();
-            $this->visibleFields = $this->dataManager->visibleJournalFieldNamess();
+            $this->visibleJournalFieldNames = $this->dataManager->visibleJournalFieldNamess();
             $this->journalFields = $this->dataManager->getJournalFields();
         }
         
@@ -64,7 +66,7 @@
                 $this->errorMsg = "Failed to save field selection {$fieldId}: " . $e->getMessage();
             }
         
-
+            // Attempt to save to database and catch and PDO exception
             try {
                 $dataMan->saveUpdatedJournalFields($this->currentUser, $this->journalFields);
             } catch (Throwable $e) {
