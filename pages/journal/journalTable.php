@@ -1,6 +1,6 @@
 <?php 
     declare(strict_types=1);
-    // $viewModel is instantiated in Journal.php and this file is included in that file
+    // $viewModel: is instantiated in Journal.php and this file is included in that file
 ?>
 
 <table id="journalTable" class="journal-table">

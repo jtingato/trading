@@ -22,7 +22,7 @@
 
         public function __construct() {
             $this->dataManager = JournalDataManager::shared();
-            $this->visibleFields = $this->dataManager->allVisibleColumnNames();
+            $this->visibleFields = $this->dataManager->visibleJournalFieldNamess();
             $this->journalFields = $this->dataManager->getJournalFields();
         }
         
@@ -31,24 +31,25 @@
             // Finish this later
         }
 
+        // Responds to user's selection of fields to display and saves to the db
+        // Updates the values in the JournalFields[] from POST[] 
         function updateFieldSelections() {
              $dataMan = JournalDataManager::shared();
 
+            // Check the POST array for html form dumping of selected fields
             if (!isset($_POST['fields']) || !is_array($_POST['fields'])) {
                 $this->errorMsg = "No fields were selected.";
                 return;
             }
 
-            // // Array of field names
-            $submittedFields = $_POST['fields'] ?? [];
-
-            // Converted POST[] into JournalField objects
-            $fieldObjects = [];
-
             try {
                 $orderingCount = 0;
+
+                // // Array of field names from POST array
+                $submittedFields = $_POST['fields'] ?? [];
                 foreach ($submittedFields as $fieldId => $properties) {
-                    
+
+                    // Find and acquire the field from JournalFields and update its values
                     $thisField = $this->findJournalField($fieldId);
 
                     if($thisField === null) { continue; }
@@ -65,7 +66,7 @@
         
 
             try {
-                $dataMan->saveVisibleJournalFields($this->currentUser, $this->journalFields);
+                $dataMan->saveUpdatedJournalFields($this->currentUser, $this->journalFields);
             } catch (Throwable $e) {
                 $this->errorMsg = "Failed to save field selections: " . get_class($e) . " - " . $e->getMessage();
                 print($this->errorMsg);

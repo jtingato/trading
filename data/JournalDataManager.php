@@ -31,7 +31,8 @@ class JournalDataManager extends DatabaseManager {
         return parent::tableExists($name);
     }
 
-    function allColumns(): array {
+    // Returns
+    function allJournalFieldNamess(): array {
         $stmt = $this->pdo->prepare("PRAGMA table_info(trading_journal)");
         $stmt->execute();
         $columns = [];
@@ -44,8 +45,8 @@ class JournalDataManager extends DatabaseManager {
         return $columns;
     }   
 
-    function allVisibleColumnNames(): array {
-        // Get all visible fields from displayable_journal_fields
+    function visibleJournalFieldNamess(): array {
+        // Get all visible fields from journal_fields table
         $visibleStmt = $this->pdo->prepare("
             SELECT field_name 
             FROM journal_fields 
@@ -63,7 +64,7 @@ class JournalDataManager extends DatabaseManager {
         $columnsStmt->execute();
         $visibleColumns = [];
 
-        $allColumns = $this->allColumns();
+        $allColumns = $this->allJournalFieldNamess();
         foreach ($allColumns as $columnName) {
             if (in_array($columnName, $visibleFields, true)) {
                 $visibleColumns[] = $columnName;
@@ -73,47 +74,8 @@ class JournalDataManager extends DatabaseManager {
         return $visibleColumns;
     }
 
-    function allColumnNames(): array {
-        // Get all visible fields from displayable_journal_fields
-        $visibleStmt = $this->pdo->prepare("
-            SELECT field_name 
-            FROM journal_fields 
-        ");
-        $visibleStmt->execute();
-        $visibleFields = $visibleStmt->fetchAll(PDO::FETCH_COLUMN);
-
-        if (empty($visibleFields)) {
-            return [];
-        }
-
-        // Get all actual columns from trading_journal
-        $columnsStmt = $this->pdo->prepare("PRAGMA table_info(trading_journal)");
-        $columnsStmt->execute();
-        $visibleColumns = [];
-
-        $allColumns = $this->allColumns();
-        foreach ($allColumns as $columnName) {
-            if (in_array($columnName, $visibleFields, true)) {
-                $visibleColumns[] = $columnName;
-            }
-        }
-
-        return $visibleColumns;
-    }
-
-    function allVisibleColumns(): array { 
-        // Get all visible fields from displayable_journal_fields 
-        $visibleStmt = $this->pdo->prepare(" SELECT * FROM journal_fields WHERE is_visible = 1 "); 
-        $visibleStmt->execute(); 
-        $visibleColumns = $visibleStmt->fetchAll();
-
-        if (empty($visibleColumns)) { 
-            print("Visible fields are empty"); 
-        } 
-        return $visibleColumns; 
-    }
-
-     public function getJournalFields(): array {
+    // Retrieves ALL JournalFields from the journal_field db table
+    public function getJournalFields(): array {
         $stmt = $this->pdo->prepare("
             SELECT field_name, user_id, ordering, friendly_name, is_visible
             FROM journal_fields
@@ -133,7 +95,8 @@ class JournalDataManager extends DatabaseManager {
         return $fields;
     }
 
-    public function saveVisibleJournalFields(string $userId, array $fields): void {        
+    // Updates the JournalFields with the newest values by deleting and replacing all fields in the db
+    public function saveUpdatedJournalFields(string $userId, array $fields): void {        
         if (!$userId) {
             throw new RuntimeException("No user id has been provided");
         }
@@ -170,7 +133,8 @@ class JournalDataManager extends DatabaseManager {
         }
     }
 
-    public function deleteAllJournalFieldsForUser(string $userId) {
+    // Deletes all JournalFiels from the journal_fields table
+    private function deleteAllJournalFieldsForUser(string $userId) {
         $stmt = $this->pdo->prepare("
             DELETE FROM journal_fields
             WHERE user_id = :user_id

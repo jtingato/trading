@@ -20,7 +20,7 @@ final class DatabaseAccessTests extends TestCase {
 
     public function testGetJournalFields() {
         $manager = JournalDataManager::shared();
-        $result = $manager->allColumns();
+        $result = $manager->allJournalFieldNamess();
 
         print_r($result);
 
@@ -29,21 +29,12 @@ final class DatabaseAccessTests extends TestCase {
 
     public function testGetVisibleJournalFieldNames() {
         $manager = JournalDataManager::shared();
-        $result = $manager->allVisibleColumnNames();
+        $result = $manager->visibleJournalFieldNamess();
 
         print_r($result);
 
         $this->assertNotNull($result);
-    }
-
-    public function testGetVisibleJournalFields() {
-        $result = JournalDataManager::shared()->allVisibleColumns();
-
-        print_r($result);
-
-        $this->assertNotNull($result);
-    }
-    
+    }   
 }
 
 ?>
