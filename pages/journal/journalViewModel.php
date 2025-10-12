@@ -24,12 +24,8 @@
             $this->dataManager = JournalDataManager::shared();
             $this->visibleFields = $this->dataManager->allVisibleColumnNames();
             $this->journalFields = $this->dataManager->getJournalFields();
-        } 
-
-        function saveSelectedDisplayableFields() {
-            print("saveSelectedDisplayableFields called");
         }
-
+        
         function updateJournalEntries() {
             $dbManager = JournalDataManager::shared();
             // Finish this later

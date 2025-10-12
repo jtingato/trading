@@ -1,6 +1,6 @@
 <?php 
     declare(strict_types=1);
-    $viewModel = new JournalViewModel();
+    // $viewModel is instantiated in Journal.php and this file is included in that file
 ?>
 
 <h3>Select Displayable Fields</h3>
