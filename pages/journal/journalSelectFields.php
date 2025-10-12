@@ -17,10 +17,10 @@
                     <input type="checkbox" name="fields[<?php echo htmlspecialchars($field->fieldName); ?>][isVisible]" value="1"
                         <?php echo $field->isVisible ? 'checked' : ''; ?>>
 
-                    <!-- Editable friendly name -->
-                    <input type="text" name="fields[<?php echo htmlspecialchars($field->fieldName); ?>][friendlyName]"
-                        value="<?php echo htmlspecialchars($field->friendlyName ?? $field->fieldName); ?>"
-                        class="friendly-name-input">
+                    <!-- Editable display name -->
+                    <input type="text" name="fields[<?php echo htmlspecialchars($field->fieldName); ?>][displayName]"
+                        value="<?php echo htmlspecialchars($field->displayName ?? $field->fieldName); ?>"
+                        class="display-name-input">
 
                     <span class="field-label">(<?php echo htmlspecialchars($field->fieldName); ?>)</span>
                 </label>

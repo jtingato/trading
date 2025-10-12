@@ -59,7 +59,7 @@
                     $thisField->fieldName       = $fieldId;
                     $thisField->userId          = $this->currentUser;
                     $thisField->ordering        = ++$orderingCount; // ordering by array position
-                    $thisField->friendlyName    = $properties['friendlyName'];
+                    $thisField->displayName    = $properties['displayName'];
                     $thisField->isVisible       = isset($properties['isVisible']) && (int)$properties['isVisible'] === 1;
                 } 
             } catch (Exception $e) {

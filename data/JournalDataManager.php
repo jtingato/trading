@@ -77,7 +77,7 @@ class JournalDataManager extends DatabaseManager {
     // Retrieves ALL JournalFields from the journal_field db table
     public function getJournalFields(): array {
         $stmt = $this->pdo->prepare("
-            SELECT field_name, user_id, ordering, friendly_name, is_visible
+            SELECT field_name, user_id, ordering, display_name, is_visible
             FROM journal_fields
         ");
         $stmt->execute();
@@ -88,7 +88,7 @@ class JournalDataManager extends DatabaseManager {
                 $row['field_name'],
                 $row['user_id'],
                 isset($row['ordering']) ? (int)$row['ordering'] : null,
-                $row['friendly_name'] ?? null,
+                $row['display_name'] ?? null,
                 (bool)$row['is_visible']
             );
         }
@@ -112,8 +112,8 @@ class JournalDataManager extends DatabaseManager {
 
             // Insert new selections
             $insertStmt = $this->pdo->prepare("
-                INSERT INTO journal_fields (field_name, user_id, friendly_name, ordering, is_visible)
-                VALUES (:field_name, :user_id, :friendly_name, :ordering, :is_visible)
+                INSERT INTO journal_fields (field_name, user_id, display_name, ordering, is_visible)
+                VALUES (:field_name, :user_id, :display_name, :ordering, :is_visible)
             ");
 
             $index = 0;
@@ -121,7 +121,7 @@ class JournalDataManager extends DatabaseManager {
                 $insertStmt->execute([
                 ':field_name'       => $field->fieldName,
                 ':user_id'          => $field->userId,
-                ':friendly_name'    => $field->friendlyName,
+                ':display_name'    => $field->displayName,
                 ':ordering'         => $field->ordering,
                 ':is_visible'       => $field->isVisible ? 1 : 0
                 ]);
