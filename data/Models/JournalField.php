@@ -3,20 +3,20 @@
         public string $fieldName;
         public string $userId;
         public ?int $ordering;
-        public ?string $friendlyName;
+        public ?string $displayName;
         public bool $isVisible;
 
         public function __construct(
             string $name = "",
             string $user_id = "",
             ?int $ordering = null,
-            ?string $friendly_name = null,
+            ?string $display_name = null,
             bool $isVisible = true
         ) {
             $this->fieldName = $name;
             $this->userId = $user_id;
             $this->ordering = $ordering;
-            $this->friendlyName = $friendly_name;
+            $this->displayName = $display_name;
             $this->isVisible = $isVisible;
         }
 
@@ -25,7 +25,7 @@
             $newJF->fieldName = $data['name'];
             $newJF->userId = $data['user_id'];
             $newJF->ordering = $data['ordering'];
-            $newJF->friendlyName = $data['friendly_name'];
+            $newJF->displayName = $data['display_name'];
             $newJF->isVisible = $data['isVisible'];
         }
 
@@ -42,8 +42,8 @@
             return $this->ordering;
         }
 
-        public function friendlyName(): ?string {
-            return $this->friendlyName;
+        public function displayName(): ?string {
+            return $this->displayName;
         }
 
         public function isVisible(): bool {
@@ -55,7 +55,7 @@
                 'field_name' => $this->fieldName,
                 'user_id' => $this->userId,
                 'ordering' => $this->ordering,
-                'friendly_name' => $this->friendlyName,
+                'display_name' => $this->displayName,
                 'is_visible' => $this->isVisible ? 1 : 0
             ];
         }
