@@ -29,7 +29,7 @@ final class DatabaseAccessTests extends TestCase {
 
     public function testGetVisibleJournalFieldNames() {
         $manager = JournalDataManager::shared();
-        $result = $manager->visibleJournalFieldNamess();
+        $result = $manager->visibleJournalFieldNames();
 
         print_r($result);
 

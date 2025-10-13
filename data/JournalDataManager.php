@@ -31,7 +31,7 @@ class JournalDataManager extends DatabaseManager {
         return parent::tableExists($name);
     }
 
-    // Returns
+    // Returns all of the table fields from trading_journal table
     function allJournalFieldNamess(): array {
         $stmt = $this->pdo->prepare("PRAGMA table_info(trading_journal)");
         $stmt->execute();
@@ -45,7 +45,12 @@ class JournalDataManager extends DatabaseManager {
         return $columns;
     }   
 
-    function visibleJournalFieldNamess(): array {
+    /* Compares all fields in trading_journal against the entries the $visibleFields array,
+     which was derived from journal_fidlds with a visible == true
+
+     Return an array of only the fields that are in both - therefore only the fields deemeed visible by the user
+    */
+    public function visibleJournalFieldNames(): array {
         // Get all visible fields from journal_fields table
         $visibleStmt = $this->pdo->prepare("
             SELECT field_name 
@@ -74,7 +79,7 @@ class JournalDataManager extends DatabaseManager {
         return $visibleColumns;
     }
 
-    // Retrieves ALL JournalFields from the journal_field db table
+    // Returns ALL JournalFields from the database's 'journal_field'  table
     public function getJournalFields(): array {
         $stmt = $this->pdo->prepare("
             SELECT field_name, user_id, ordering, display_name, is_visible

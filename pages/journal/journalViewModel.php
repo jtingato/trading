@@ -24,7 +24,7 @@
 
         public function __construct() {
             $this->dataManager = JournalDataManager::shared();
-            $this->visibleJournalFieldNames = $this->dataManager->visibleJournalFieldNamess();
+            $this->visibleJournalFieldNames = $this->dataManager->visibleJournalFieldNames();
             $this->journalFields = $this->dataManager->getJournalFields();
         }
         
