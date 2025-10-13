@@ -9,7 +9,7 @@
         public array $journalFields = [];
         
         // The field that have been selected by the user to be displayed
-        var $visibleJournalFieldNames = [];
+        var $journalHeaderNames = [];
         
         // The journal entries from journal_table
         var $rows = [];
@@ -24,7 +24,7 @@
 
         public function __construct() {
             $this->dataManager = JournalDataManager::shared();
-            $this->visibleJournalFieldNames = $this->dataManager->visibleJournalFieldNames();
+            $this->journalHeaderNames = $this->dataManager->visibleJournalFieldDisplayNames();
             $this->journalFields = $this->dataManager->getJournalFields();
         }
         

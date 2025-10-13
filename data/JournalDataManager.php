@@ -79,6 +79,23 @@ class JournalDataManager extends DatabaseManager {
         return $visibleColumns;
     }
 
+    public function visibleJournalFieldDisplayNames(): array {
+        // Get all visible fields from journal_fields table
+        $visibleStmt = $this->pdo->prepare("
+            SELECT display_name 
+            FROM journal_fields 
+            WHERE is_visible = 1
+        ");
+        $visibleStmt->execute();
+        $visibleFields = $visibleStmt->fetchAll(PDO::FETCH_COLUMN);
+
+        if (empty($visibleFields)) {
+            return [];
+        }
+
+        return $visibleFields;
+    }
+
     // Returns ALL JournalFields from the database's 'journal_field'  table
     public function getJournalFields(): array {
         $stmt = $this->pdo->prepare("

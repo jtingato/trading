@@ -34,7 +34,16 @@ final class DatabaseAccessTests extends TestCase {
         print_r($result);
 
         $this->assertNotNull($result);
-    }   
+    }
+    
+    public function testGetVisibleJournalFieldNamesAndDisplayNames() {
+        $manager = JournalDataManager::shared();
+        $result = $manager->visibleJournalFieldDisplayNames();
+
+        print_r($result);
+
+        $this->assertNotNull($result);
+    }  
 }
 
 ?>

@@ -7,7 +7,7 @@
     <thead>
         <tr>
             <?php
-            $columnHeaderName = $viewModel->visibleJournalFieldNames;
+            $columnHeaderName = $viewModel->journalHeaderNames;
             foreach ($columnHeaderName as $columnName) {
                 echo "<th>" . htmlspecialchars($columnName) . "</th>";
             }
