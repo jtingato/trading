@@ -5,6 +5,7 @@ use PHPUnit\Framework\TestCase;
 
 require dirname(__DIR__) . "/data/JournalDataManager.php";
 require dirname(__DIR__) . "/NavigationRouter.php";
+//require dirname(__DIR__) . "/pages/journal/journalViewModel.php";
 
 final class DatabaseAccessTests extends TestCase {
     public function testGetPDO() {
@@ -46,10 +47,10 @@ final class DatabaseAccessTests extends TestCase {
     } 
     
     public function testGetJournalEntries() {
+
         $manager = JournalDataManager::shared();
-        
-        $result = $manager->getJournalEntries();
-        
+        $result = $manager->getJournalEntries(['symbol', 'price_per_unit']);
+
         print_r($result);
 
         $this->assertNotNull($result);

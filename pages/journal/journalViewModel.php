@@ -26,11 +26,12 @@
             $this->dataManager = JournalDataManager::shared();
             $this->journalHeaderNames = $this->dataManager->visibleJournalFieldDisplayNames();
             $this->journalFields = $this->dataManager->getJournalFields();
+            $this->getJournalEntries();
         }
         
         function getJournalEntries() {
-            $dbManager = JournalDataManager::shared();
-            // Finish this later
+            $dataMan = JournalDataManager::shared();
+            $this->rows = $dataMan->getJournalEntries($this->journalHeaderNames);
         }
 
         // Responds to user's selection of fields to display and saves to the db
@@ -82,6 +83,37 @@
                 }
             }
             return null;
+        }
+
+        // Convert a single fieldName into a displayName
+        public function displayNameFromFieldName($fieldName) : string {
+            return $this->findJournalField($fieldName)->displayName;
+        }
+
+        // Convert a single displayName into a fieldName
+        public function fieldNameFromDisplayName($displayName) : string {
+            return $this->findJournalField($displayName)->displayName;
+        }
+
+        // Convert an array fieldNames into an array of displayNames
+        public function displayNamesFromFieldNames($fieldNames) : array {
+            $result = [];
+
+            foreach ($fieldNames as $fieldName) {
+                $result[] = $this->findJournalField($fieldName)->displayName;
+            }
+            
+            return $result;
+        }
+
+        public function fieldNamesFromDisplayNames($displayNames) : array {
+             $result = [];
+
+            foreach ($displayNames as $displayName) {
+                $result[] = $this->findJournalField($displayName)->fieldName;
+            }
+            
+            return $result;
         }
 
     }

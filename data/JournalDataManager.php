@@ -82,7 +82,7 @@ class JournalDataManager extends DatabaseManager {
     public function visibleJournalFieldDisplayNames(): array {
         // Get all visible fields from journal_fields table
         $visibleStmt = $this->pdo->prepare("
-            SELECT display_name 
+            SELECT field_name 
             FROM journal_fields 
             WHERE is_visible = 1
         ");

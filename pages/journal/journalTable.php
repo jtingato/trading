@@ -7,7 +7,8 @@
     <thead>
         <tr>
             <?php
-            $columnHeaderName = $viewModel->journalHeaderNames;
+            $columnHeaders = $viewModel->journalHeaderNames;
+            $columnHeaderName = $viewModel->displayNamesFromFieldNames($columnHeaders);
             foreach ($columnHeaderName as $columnName) {
                 echo "<th>" . htmlspecialchars($columnName) . "</th>";
             }
@@ -20,14 +21,14 @@
         if (!empty($rows)) {
             foreach ($rows as $row) {
                 echo "<tr>";
-                foreach ($columnHeaderName as $columnName) {
+                foreach ($columnHeaders as $columnName) {
                     $value = isset($row[$columnName]) ? $row[$columnName] : '';
-                    echo "<td>" . htmlspecialchars($value) . "</td>";
+                    echo "<td>" . htmlspecialchars(strval($value)) . "</td>";
                 }
                 echo "</tr>";
             }
         } else {
-            $colspan = max(1, count($columnHeaderName));
+            $colspan = max(1, count($columnHeades));
             echo "<tr><td colspan=\"" . $colspan . "\">No rows yet.</td></tr>";
         }
         ?>
