@@ -28,7 +28,7 @@
             $this->journalFields = $this->dataManager->getJournalFields();
         }
         
-        function updateJournalEntries() {
+        function getJournalEntries() {
             $dbManager = JournalDataManager::shared();
             // Finish this later
         }

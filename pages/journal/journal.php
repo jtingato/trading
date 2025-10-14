@@ -21,7 +21,7 @@
     </div>
 
 <div class="journal-layout">
-    <?php $viewModel->updateJournalEntries(); ?>
+    <?php $viewModel->getJournalEntries(); ?>
 
     <!-- Right-hand journal content -->
     <div class="journal-container">

@@ -117,6 +117,21 @@ class JournalDataManager extends DatabaseManager {
         return $fields;
     }
 
+    // Return all Journal Entries from the db
+    public function getJournalEntries($columnList = []): array {
+        // Join the array into a comma-separated string
+        $columns = $columnList ? implode(', ', $columnList) : '*';
+
+        $stmt = $this->pdo->prepare("
+            SELECT {$columns}
+            FROM trading_journal
+        ");
+        $stmt->execute();
+        $result = $stmt->fetchAll(PDO::FETCH_ASSOC);
+
+        return $result;
+    }   
+
     // Updates the JournalFields with the newest values by deleting and replacing all fields in the db
     public function saveUpdatedJournalFields(string $userId, array $fields): void {        
         if (!$userId) {
