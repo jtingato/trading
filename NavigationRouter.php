@@ -14,7 +14,7 @@
 			return $this->findFileRecursive($siteBaseDir, $name);
 		}
 
-		public function findMonarchBase($startDir = __DIR__, $rootFolderName = 'monarch'): ?string {
+		public function findMonarchBase($startDir = __DIR__, $rootFolderName = 'Monarch'): ?string {
 			$current = realpath($startDir);
 		
 			while ($current !== false) {
