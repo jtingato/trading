@@ -74,6 +74,15 @@ nav ul li a.active {
     border-bottom: 2px solid #007bff;
 }
 
+#journalTable th {
+    color: black;
+    background-color: #dddddd;
+    display: table-cell;
+    vertical-align: inherit;
+    font-weight: bold;
+    unicode-bidi: isolate;
+}
+
 /* =====================
     Responsive Design
     ===================== */
