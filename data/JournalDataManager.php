@@ -84,7 +84,8 @@ class JournalDataManager extends DatabaseManager {
         $visibleStmt = $this->pdo->prepare("
             SELECT field_name 
             FROM journal_fields 
-            WHERE is_visible = 1
+            WHERE is_visible = 1 
+            ORDER BY ordering ASC
         ");
         $visibleStmt->execute();
         $visibleFields = $visibleStmt->fetchAll(PDO::FETCH_COLUMN);
@@ -170,13 +171,73 @@ class JournalDataManager extends DatabaseManager {
         }
     }
 
-    // Deletes all JournalFiels from the journal_fields table
+    // Deletes all JournalFields from the journal_fields table
     private function deleteAllJournalFieldsForUser(string $userId) {
         $stmt = $this->pdo->prepare("
             DELETE FROM journal_fields
             WHERE user_id = :user_id
         ");
         $stmt->execute([':user_id' => $userId]);
+    }
+
+    // Updates the database with the new column ordering.
+    // $orderedColumnNames is an array of mixture of either fieldNames or display names in the new order
+    // This function is primarily called from an AJAX request when the user reorders columns in the journal table.
+    // Since the ajax returns the column headers which mat have been changed by the user, we need to map them back to field names.
+    public function updateColumnOrdering(array $orderedColumnNames): void {
+    $this->pdo->beginTransaction();
+    try {
+        $updateStmt = $this->pdo->prepare("
+            UPDATE journal_fields
+            SET ordering = :ordering
+            WHERE field_name = :field_name
+        ");
+
+        foreach ($orderedColumnNames as $index => $displayName) {
+            $fieldName = $this->fieldNameFromDisplayName($displayName);
+            if ($fieldName === null) {
+                throw new RuntimeException("No matching field_name found for displayName: {$displayName}");
+            }
+
+            $updateStmt->execute([
+                ':ordering' => $index + 1,
+                ':field_name' => $fieldName
+            ]);
+        }
+
+        $this->pdo->commit();
+        } catch (Throwable $e) {
+            $this->pdo->rollBack();
+            throw new RuntimeException("Failed to update column ordering: " . $e->getMessage());
+        }
+    }
+
+    private function fieldNameFromDisplayName(string $displayName): ?string {
+        // First, check if displayName matches a field_name
+        $stmt = $this->pdo->prepare("
+            SELECT field_name
+            FROM journal_fields
+            WHERE field_name = :name
+            LIMIT 1
+        ");
+        $stmt->execute([':name' => $displayName]);
+        $result = $stmt->fetch(PDO::FETCH_ASSOC);
+
+        if ($result) {
+            return $result['field_name'];
+        }
+
+        // If not, check if displayName matches a display_name
+        $stmt = $this->pdo->prepare("
+            SELECT field_name
+            FROM journal_fields
+            WHERE display_name = :name
+            LIMIT 1
+        ");
+        $stmt->execute([':name' => $displayName]);
+        $result = $stmt->fetch(PDO::FETCH_ASSOC);
+
+        return $result ? $result['field_name'] : null;
     }
 }
 ?>

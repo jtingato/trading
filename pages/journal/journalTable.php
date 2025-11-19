@@ -40,39 +40,80 @@
 
 <!-- SortableJS -->
 <script src="https://cdn.jsdelivr.net/npm/sortablejs@latest/Sortable.min.js"></script>
-
 <script>
 document.addEventListener('DOMContentLoaded', function () {
-  const headerRow = document.getElementById('sortable-header');
-  const table = document.getElementById('journalTable');
-  const tbody = table.querySelector('tbody');
+    const headerRow = document.getElementById('sortable-header');
+    const table = document.getElementById('journalTable');
+    const tbody = table.querySelector('tbody');
 
-  new Sortable(headerRow, {
-    animation: 150,
-    ghostClass: 'sortable-ghost',
-    onEnd: function () {
-      const newOrder = Array.from(headerRow.children).map(th => th.getAttribute('data-index'));
+    // Restore column order from localStorage
+    const savedOrder = JSON.parse(localStorage.getItem('columnOrder') || 'null');
+    if (savedOrder) {
+        const headerCells = Array.from(headerRow.children);
+        const reorderedHeader = savedOrder.map(i => headerCells[i]);
+        reorderedHeader.forEach(cell => headerRow.appendChild(cell));
 
-      Array.from(tbody.rows).forEach(row => {
-        const cells = Array.from(row.cells);
-        const reordered = newOrder.map(i => cells[parseInt(i)]);
-        reordered.forEach(cell => row.appendChild(cell));
-      });
+        Array.from(tbody.rows).forEach(row => {
+            const cells = Array.from(row.cells);
+            const reordered = savedOrder.map(i => cells[i]);
+            reordered.forEach(cell => row.appendChild(cell));
+        });
 
-      // Update header data-index to reflect new order
-      Array.from(headerRow.children).forEach((th, i) => {
-        th.setAttribute('data-index', i);
-      });
+        // Update data-index attributes
+        Array.from(headerRow.children).forEach((th, i) => {
+            th.setAttribute('data-index', i);
+        });
     }
-  });
 
-  document.querySelector('a.order').addEventListener('click', function (e) {
-    e.preventDefault();
-    const order = Array.from(headerRow.children).map(th => th.textContent.trim());
-    document.querySelector('.porder').textContent = order.join(', ');
-  });
+    // Enable drag-and-drop
+    new Sortable(headerRow, {
+        animation: 150,
+        ghostClass: 'sortable-ghost',
+        
+        onEnd: function () {
+        const newOrder = Array.from(headerRow.children).map(th => ({
+            index: th.getAttribute('data-index'),
+            label: th.textContent.trim()
+        }));
+
+        // Reorder each row's cells
+        Array.from(tbody.rows).forEach(row => {
+            const cells = Array.from(row.cells);
+            const reordered = newOrder.map(obj => cells[parseInt(obj.index)]);
+            reordered.forEach(cell => row.appendChild(cell));
+        });
+
+        // Update header data-index
+        Array.from(headerRow.children).forEach((th, i) => {
+            th.setAttribute('data-index', i);
+        });
+
+    // Send to server via AJAX
+        fetch('/RequestHandler.php', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({ columnOrder: newOrder.map(obj => obj.label) })
+        })
+        .then(response => response.json())
+        .then(data => {
+            console.log('Column order saved:', data);
+        })
+        .catch(error => {
+            console.error('Error saving column order:', error);
+        });
+    }});
+
+  // Show column order on button click
+    document.querySelector('a.order').addEventListener('click', function (e) {
+        e.preventDefault();
+        const order = Array.from(headerRow.children).map(th => th.textContent.trim());
+        document.querySelector('.porder').textContent = order.join(', ');
+    });
 });
 </script>
+
 
 <style>
 .sortable-ghost {
