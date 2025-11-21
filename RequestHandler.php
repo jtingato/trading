@@ -24,11 +24,9 @@ function updateSorting($order) {
     try {
         require_once 'NavigationRouter.php';
         require_once 'data/JournalDataManager.php';
+
+        JournalDataManager::shared()->updateColumnOrdering($order);
         
-        $dm = JournalDataManager::shared();
-        echo "Calling updateColumnOrder\n";
-        $dm->updateColumnOrdering($order);
-        echo "Finished updateColumnOrder\n";
     } catch (Throwable $e) {
             echo "Failed to include JournalDataManager: " . $e->getMessage() . "\n";
         return;

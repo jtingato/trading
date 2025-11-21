@@ -130,6 +130,17 @@ class JournalDataManager extends DatabaseManager {
         $stmt->execute();
         $result = $stmt->fetchAll(PDO::FETCH_ASSOC);
 
+        foreach ($result as &$entry) {
+            // Convert date strings to DateTime objects and format them to readable dates
+            if (isset($entry['exec_time'])) {
+                $date = new DateTime($entry['exec_time']);
+
+                // Format: SEPT 01, 2025 - 09:30 am
+                $formatted = strtoupper($date->format('M')) . ' ' . $date->format('d, Y - h:i a');
+                $entry['exec_time'] = $formatted;
+            }
+        }
+
         return $result;
     }   
 
@@ -154,7 +165,6 @@ class JournalDataManager extends DatabaseManager {
                 VALUES (:field_name, :user_id, :display_name, :ordering, :is_visible)
             ");
 
-            $index = 0;
             foreach ($fields as $field) {
                 $insertStmt->execute([
                 ':field_name'       => $field->fieldName,
@@ -180,7 +190,7 @@ class JournalDataManager extends DatabaseManager {
         $stmt->execute([':user_id' => $userId]);
     }
 
-    // Updates the database with the new column ordering.
+    // Updates the database with the new column ordering as set by the user draggig and dropping columns.
     // $orderedColumnNames is an array of mixture of either fieldNames or display names in the new order
     // This function is primarily called from an AJAX request when the user reorders columns in the journal table.
     // Since the ajax returns the column headers which mat have been changed by the user, we need to map them back to field names.
@@ -193,12 +203,14 @@ class JournalDataManager extends DatabaseManager {
             WHERE field_name = :field_name
         ");
 
+        // Loop through the ordered column names and update their ordering in the database
         foreach ($orderedColumnNames as $index => $displayName) {
             $fieldName = $this->fieldNameFromDisplayName($displayName);
             if ($fieldName === null) {
                 throw new RuntimeException("No matching field_name found for displayName: {$displayName}");
             }
 
+            // Saved ordering in the database is 1-based index
             $updateStmt->execute([
                 ':ordering' => $index + 1,
                 ':field_name' => $fieldName
@@ -212,6 +224,7 @@ class JournalDataManager extends DatabaseManager {
         }
     }
 
+    // Returns the corresponding field name for a given a display name from the journal_fields table   
     private function fieldNameFromDisplayName(string $displayName): ?string {
         // First, check if displayName matches a field_name
         $stmt = $this->pdo->prepare("
