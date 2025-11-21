@@ -34,7 +34,7 @@
                 include $navigationRouter->pathForFileNamed("journalSelectFields.php");
             elseif($action === 'save_fields'):
                 // Update the JournalFields property in the viewModel
-                $viewModel->updateFieldSelections();
+                $viewModel->updateJournalFieldNamesAndVisibility();
                 // Redirect to journal view
                 header("Location: ?page=journal");
                 exit;

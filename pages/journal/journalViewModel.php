@@ -30,14 +30,12 @@
         }
         
         function getJournalEntries() {
-            $dataMan = JournalDataManager::shared();
-            $this->rows = $dataMan->getJournalEntries($this->journalHeaderNames);
+            $this->rows = $this->dataManager->getJournalEntries($this->journalHeaderNames);
         }
 
         // Responds to user's selection of fields to display and saves to the db
         // Updates the values in the JournalFields[] from POST[] 
-        function updateFieldSelections() {
-             $dataMan = JournalDataManager::shared();
+        function updateJournalFieldNamesAndVisibility() {
 
             // Check the POST array for html form dumping of selected fields
             if (!isset($_POST['fields']) || !is_array($_POST['fields'])) {
@@ -59,17 +57,17 @@
                     
                     $thisField->fieldName       = $fieldId;
                     $thisField->userId          = $this->currentUser;
-                    $thisField->ordering        = ++$orderingCount; // ordering by array position
-                    $thisField->displayName    = $properties['displayName'];
+                    $thisField->displayName     = $properties['displayName'];
                     $thisField->isVisible       = isset($properties['isVisible']) && (int)$properties['isVisible'] === 1;
+                    $thisField->ordering        = $properties['isVisible'] ? $thisField->ordering : 0;
                 } 
             } catch (Exception $e) {
                 $this->errorMsg = "Failed to save field selection {$fieldId}: " . $e->getMessage();
             }
         
-            // Attempt to save to database and catch and PDO exception
+            // Attempt to save to database; catch any PDO exception
             try {
-                $dataMan->saveUpdatedJournalFields($this->currentUser, $this->journalFields);
+                $this->dataManager->saveJournalFieldNamesAndVisibility($this->currentUser, $this->journalFields);
             } catch (Throwable $e) {
                 $this->errorMsg = "Failed to save field selections: " . get_class($e) . " - " . $e->getMessage();
                 print($this->errorMsg);

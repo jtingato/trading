@@ -133,8 +133,8 @@ class JournalDataManager extends DatabaseManager {
         return $result;
     }   
 
-    // Updates the JournalFields with the newest values by deleting and replacing all fields in the db
-    public function saveUpdatedJournalFields(string $userId, array $fields): void {        
+    // Updates the JournalFields visbility and DisplayName by deleting and replacing all fields in the db
+    public function saveJournalFieldNamesAndVisibility(string $userId, array $fields): void {        
         if (!$userId) {
             throw new RuntimeException("No user id has been provided");
         }
@@ -159,7 +159,7 @@ class JournalDataManager extends DatabaseManager {
                 $insertStmt->execute([
                 ':field_name'       => $field->fieldName,
                 ':user_id'          => $field->userId,
-                ':display_name'    => $field->displayName,
+                ':display_name'     => $field->displayName,
                 ':ordering'         => $field->ordering,
                 ':is_visible'       => $field->isVisible ? 1 : 0
                 ]);
@@ -171,7 +171,7 @@ class JournalDataManager extends DatabaseManager {
         }
     }
 
-    // Deletes all JournalFields from the journal_fields table
+    // Deletes all JournalFields from the journal_fields table for a particular user
     private function deleteAllJournalFieldsForUser(string $userId) {
         $stmt = $this->pdo->prepare("
             DELETE FROM journal_fields
