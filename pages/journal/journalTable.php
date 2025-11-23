@@ -10,7 +10,9 @@
             $columnHeaderName = $viewModel->displayNamesFromFieldNames($columnHeaders);
             foreach ($columnHeaderName as $index => $columnName) {
                 $safeId = preg_replace('/[^a-zA-Z0-9_-]/', '_', $columnName);
-                echo "<th data-index=\"$index\" data-col=\"" . htmlspecialchars($safeId) . "\">" . htmlspecialchars($columnName) . "</th>";
+                echo "<th data-index=\"$index\" data-col=\"" . htmlspecialchars($safeId) . "\">";
+                echo "<i class=\"fas fa-grip-vertical drag-icon\"></i> " . htmlspecialchars($columnName);
+                echo "</th>";
             }
             ?>
         </tr>
@@ -35,8 +37,8 @@
     </tbody>
 </table>
 
-<a href="#" class="btn btn-info order">Get Column Order</a>
-<p class="porder"></p>
+<!-- <a href="#" class="btn btn-info order">Get Column Order</a>
+<p class="porder"></p> -->
 
 <!-- SortableJS -->
 <script src="https://cdn.jsdelivr.net/npm/sortablejs@latest/Sortable.min.js"></script>
@@ -69,6 +71,7 @@ document.addEventListener('DOMContentLoaded', function () {
     new Sortable(headerRow, {
         animation: 150,
         ghostClass: 'sortable-ghost',
+        handle: '.drag-icon',
         
         onEnd: function () {
         const newOrder = Array.from(headerRow.children).map(th => ({
