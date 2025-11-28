@@ -5,7 +5,7 @@
 
 declare(strict_types=1);
 use PHPUnit\Framework\TestCase;
-
+use Monarch\Routing\NavigationRouter;
 require dirname(__DIR__) . "/NavigationRouter.php";
 final class NavigationRouterTests extends TestCase {
 

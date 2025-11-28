@@ -2,6 +2,8 @@
 
 declare(strict_types=1);
 use PHPUnit\Framework\TestCase;
+use Monarch\Data\JournalDataManager;
+use Monarch\Routing\NavigationRouter;
 
 require dirname(__DIR__) . "/data/JournalDataManager.php";
 require dirname(__DIR__) . "/NavigationRouter.php";
@@ -22,8 +24,6 @@ final class DatabaseAccessTests extends TestCase {
     public function testGetJournalFields() {
         $manager = JournalDataManager::shared();
         $result = $manager->allJournalFieldNamess();
-
-        print_r($result);
 
         $this->assertNotNull($result);
     }

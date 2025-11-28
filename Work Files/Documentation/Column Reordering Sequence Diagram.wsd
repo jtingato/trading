@@ -1,0 +1,41 @@
+@startuml
+title Column Reorder Flow (Monarch Journal)
+
+actor User
+participant "Browser (SortableJS)" as Browser
+participant "RequestHandler.php" as Handler
+participant "JournalDataManager" as DataManager
+database "SQLite DB" as DB
+participant "index.php" as Index
+participant "JournalViewModel" as VM
+participant "journalTable.php" as Table
+
+User -> Browser : Drag column
+Browser -> Browser : Detect new order (onEnd)
+Browser -> Handler : POST /RequestHandler {columnOrder}
+
+Handler -> DataManager : updateColumnOrdering(order)
+DataManager -> DB : UPDATE journal_fields\nSET ordering = n
+DB --> DataManager : success
+DataManager --> Handler : success
+Handler --> Browser : HTTP 200 OK
+
+Browser -> Browser : window.location.reload()
+
+Browser -> Index : Reload page
+Index -> VM : new JournalViewModel()
+
+VM -> DataManager : load visible field names\nORDER BY ordering ASC
+DataManager -> DB : SELECT field_name FROM journal_fields
+DB --> DataManager : list of field names
+DataManager --> VM : sorted field names
+
+VM -> DataManager : load journal rows
+DataManager -> DB : SELECT * FROM trading_journal
+DB --> DataManager : journal entries
+DataManager --> VM : rows
+
+Index -> Table : include journalTable.php
+Table --> Browser : Rendered HTML (aligned table)
+
+@enduml

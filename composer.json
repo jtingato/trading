@@ -1,5 +1,12 @@
 {
     "require-dev": {
         "phpunit/phpunit": "^9"
-    }
+    },
+    "autoload": {
+        "psr-4": {
+            "Monarch\\": "app/"
+        }
+    }   
+
+
 }
