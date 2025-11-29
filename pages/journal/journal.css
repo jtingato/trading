@@ -54,6 +54,17 @@
 	font-size: small;
 	font-weight: lighter;
 }
+
+.journal-table .resize-handle {
+    position: absolute;
+    right: 0;
+    top: 0;
+    width: 5px;
+    height: 100%;
+    cursor: col-resize;
+    user-select: none;
+    background-color: transparent;
+}
   
 .error-box {
     background: #ffe0e0;

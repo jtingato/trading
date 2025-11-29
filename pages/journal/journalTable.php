@@ -14,9 +14,11 @@ $displayNames = $viewModel->displayNamesFromFieldNames($fieldNames);
             <?php foreach ($displayNames as $i => $label): 
                 $field = $fieldNames[$i];
             ?>
-                <th data-field="<?= htmlspecialchars($field) ?>" data-index="<?= $i ?>">
+                <th 
+                    data-field="<?= htmlspecialchars($field) ?>" data-index="<?= $i ?>">
                     <i class="fas fa-grip-vertical drag-icon"></i>
                     <?= htmlspecialchars($label) ?>
+                    <div class="resize-handle"></div>
                 </th>
             <?php endforeach; ?>
         </tr>
@@ -38,40 +40,76 @@ $displayNames = $viewModel->displayNamesFromFieldNames($fieldNames);
 <script src="https://cdn.jsdelivr.net/npm/sortablejs@latest/Sortable.min.js"></script>
 
 <script>
-document.addEventListener("DOMContentLoaded", function () {
+    document.addEventListener("DOMContentLoaded", function () {
 
-    const headerRow = document.getElementById("sortable-header");
+        const headerRow = document.getElementById("sortable-header");
 
-    new Sortable(headerRow, {
-        animation: 150,
-        handle: ".drag-icon",
-        ghostClass: "sortable-ghost",
+        new Sortable(headerRow, {
+            animation: 150,
+            handle: ".drag-icon",
+            ghostClass: "sortable-ghost",
 
-        onEnd: function () {
+            onEnd: function () {
 
-            // Get new field order
-            const ths = Array.from(headerRow.children);
-            const newOrder = ths.map(th => th.getAttribute("data-field"));
+                // Get new field order
+                const ths = Array.from(headerRow.children);
+                const newOrder = ths.map(th => th.getAttribute("data-field"));
 
-            // Save locally
-            localStorage.setItem("columnOrder", JSON.stringify(newOrder));
+                // Save locally
+                localStorage.setItem("columnOrder", JSON.stringify(newOrder));
 
-            // Save server-side
-            fetch("/Http/RequestHandler.php", {
-                method: "POST",
-                headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({ columnOrder: newOrder })
-            })
-            .then(() => {
-                // ⭐ CRITICAL FIX: let PHP regenerate the table after ordering change
-                window.location.reload();
-            })
-            .catch(err => console.error("Column order save failed:", err));
-        }
+                // Save server-side
+                fetch("/Http/RequestHandler.php", {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({ columnOrder: newOrder })
+                })
+                .then(() => {
+                    // ⭐ CRITICAL FIX: let PHP regenerate the table after ordering change
+                    window.location.reload();
+                })
+                .catch(err => console.error("Column order save failed:", err));
+            }
+        });
+
     });
-
-});
 </script>
+
+<script>
+    document.addEventListener("DOMContentLoaded", function () {
+
+        let startX, startWidth, currentTh;
+
+        document.querySelectorAll("th .resize-handle").forEach(handle => {
+            handle.addEventListener("mousedown", function (e) {
+                currentTh = e.target.parentElement;
+                startX = e.pageX;
+                startWidth = currentTh.offsetWidth;
+                document.addEventListener("mousemove", resizeColumn);
+                document.addEventListener("mouseup", stopResize);
+                e.preventDefault();
+            });
+        });
+
+        function resizeColumn(e) {
+            const newWidth = startWidth + (e.pageX - startX);
+            currentTh.style.width = newWidth + "px";
+
+            const index = Array.from(currentTh.parentNode.children).indexOf(currentTh);
+
+            document.querySelectorAll("#journalTable tbody tr").forEach(row => {
+                row.cells[index].style.width = newWidth + "px";
+            });
+        }
+
+        function stopResize() {
+            document.removeEventListener("mousemove", resizeColumn);
+            document.removeEventListener("mouseup", stopResize);
+        }
+
+    });
+</script>
+
 
 <style>
 .sortable-ghost {
