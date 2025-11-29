@@ -13,9 +13,14 @@ $displayNames = $viewModel->displayNamesFromFieldNames($fieldNames);
         <tr id="sortable-header">
             <?php foreach ($displayNames as $i => $label): 
                 $field = $fieldNames[$i];
+                $width = $viewModel->findJournalField($field)->width;
+                $widthStyle = $width ? "style=\"width: {$width}px\"" : "";
             ?>
                 <th 
-                    data-field="<?= htmlspecialchars($field) ?>" data-index="<?= $i ?>">
+                    data-field="<?= htmlspecialchars($field) ?>" 
+                    data-index="<?= $i ?>"
+                    <?= $widthStyle ?>
+                >
                     <i class="fas fa-grip-vertical drag-icon"></i>
                     <?= htmlspecialchars($label) ?>
                     <div class="resize-handle"></div>
@@ -105,9 +110,24 @@ $displayNames = $viewModel->displayNamesFromFieldNames($fieldNames);
         function stopResize() {
             document.removeEventListener("mousemove", resizeColumn);
             document.removeEventListener("mouseup", stopResize);
-        }
 
-    });
+            // Save the width to DB
+            const fieldName = currentTh.getAttribute("data-field");
+
+            fetch("/Http/RequestHandler.php", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({
+                    updateWidth: {
+                        field: fieldName,
+                        width: currentTh.offsetWidth
+                    }
+                })
+            })
+            .catch(err => console.error("Failed to save width:", err));
+                }
+
+            });
 </script>
 
 

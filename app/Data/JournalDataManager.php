@@ -80,7 +80,7 @@ class JournalDataManager extends DatabaseManager
     public function getJournalFields(): array
     {
         $stmt = $this->pdo->prepare("
-            SELECT field_name, user_id, ordering, display_name, is_visible
+            SELECT field_name, user_id, ordering, display_name, is_visible, width
             FROM journal_fields
             ORDER BY ordering ASC
         ");
@@ -93,7 +93,8 @@ class JournalDataManager extends DatabaseManager
                 $row['user_id'],
                 isset($row['ordering']) ? (int)$row['ordering'] : null,
                 $row['display_name'] ?: null,
-                (bool)$row['is_visible']
+                (bool)$row['is_visible'],
+                isset($row['width']) ? (int)$row['width'] : null
             );
         }
 
@@ -145,7 +146,7 @@ class JournalDataManager extends DatabaseManager
 
             // Insert new values
             $insert = $this->pdo->prepare("
-                INSERT INTO journal_fields (field_name, user_id, display_name, ordering, is_visible)
+                INSERT INTO journal_fields (field_name, user_id, display_name, ordering, is_visible, width)
                 VALUES (:field, :uid, :name, :ord, :vis)
             ");
 
@@ -155,7 +156,8 @@ class JournalDataManager extends DatabaseManager
                     ':uid'   => $f->userId,
                     ':name'  => $f->displayName,
                     ':ord'   => $f->ordering,
-                    ':vis'   => $f->isVisible ? 1 : 0
+                    ':vis'   => $f->isVisible ? 1 : 0,
+                    ':width' => $f->width
                 ]);
             }
 
@@ -196,5 +198,18 @@ class JournalDataManager extends DatabaseManager
                 "Failed to update column ordering: " . $e->getMessage()
             );
         }
+    }
+
+    public function updateColumnWidth(string $fieldName, int $width): void {
+        $stmt = $this->pdo->prepare("
+            UPDATE journal_fields
+            SET width = :width
+            WHERE field_name = :field_name
+        ");
+
+        $stmt->execute([
+            ':width' => $width,
+            ':field_name' => $fieldName
+        ]);
     }
 }

@@ -10,19 +10,22 @@ class JournalField
     public ?int $ordering;
     public ?string $displayName;
     public bool $isVisible;
+    public ?int $width;
 
     public function __construct(
         string $name = '',
         string $userId = '',
         ?int $ordering = null,
         ?string $displayName = null,
-        bool $isVisible = true
+        bool $isVisible = true,
+        ?int $width = null
     ) {
         $this->fieldName   = $name;
         $this->userId      = $userId;
         $this->ordering    = $ordering;
         $this->displayName = $displayName;
         $this->isVisible   = $isVisible;
+        $this->width       = $width;
     }
 
     /**
@@ -53,7 +56,8 @@ class JournalField
             'user_id'      => $this->userId,
             'ordering'     => $this->ordering,
             'display_name' => $this->displayName,
-            'is_visible'   => $this->isVisible ? 1 : 0
+            'is_visible'   => $this->isVisible ? 1 : 0,
+            'width'        => $this->width,
         ];
     }
 }

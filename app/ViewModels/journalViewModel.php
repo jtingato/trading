@@ -85,7 +85,7 @@ class JournalViewModel
         }
     }
 
-    private function findJournalField(string $field): ?JournalField
+    public function findJournalField(string $field): ?JournalField
     {
         foreach ($this->journalFields as $jf) {
             if ($jf->fieldName === $field) {
