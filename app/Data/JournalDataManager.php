@@ -212,4 +212,32 @@ class JournalDataManager extends DatabaseManager
             ':field_name' => $fieldName
         ]);
     }
+
+    public function getCheckOptions(string $fieldName): ?array {
+        $stmt = $this->pdo->prepare("
+            SELECT sql 
+            FROM sqlite_master 
+            WHERE type='table' AND name='trading_journal'
+        ");
+        $stmt->execute();
+
+        $createSql = $stmt->fetchColumn();
+
+        if (!$createSql) return null;
+
+        // Pattern: CHECK(field IN ('a','b'))
+        $pattern = "/CHECK\s*\(\s*$fieldName\s+IN\s*\(([^)]*)\)\s*\)/i";
+
+        if (preg_match($pattern, $createSql, $matches)) {
+
+            $list = $matches[1]; // "'a','b','c'"
+
+            return array_map(
+                fn($v) => trim($v, " '\""),
+                explode(",", $list)
+            );
+        }
+
+        return null; // No constraint
+    }
 }

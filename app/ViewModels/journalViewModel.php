@@ -142,4 +142,8 @@ class JournalViewModel
         }
         return $out;
     }
+
+    public function optionsForFieldName(string $fieldName): ?array {
+        return $this->dataManager->getCheckOptions($fieldName);
+    }
 }
