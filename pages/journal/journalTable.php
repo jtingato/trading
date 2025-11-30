@@ -60,9 +60,6 @@ $displayNames = $viewModel->displayNamesFromFieldNames($fieldNames);
                 const ths = Array.from(headerRow.children);
                 const newOrder = ths.map(th => th.getAttribute("data-field"));
 
-                // Save locally
-                localStorage.setItem("columnOrder", JSON.stringify(newOrder));
-
                 // Save server-side
                 fetch("/Http/RequestHandler.php", {
                     method: "POST",
@@ -125,9 +122,8 @@ $displayNames = $viewModel->displayNamesFromFieldNames($fieldNames);
                 })
             })
             .catch(err => console.error("Failed to save width:", err));
-                }
-
-            });
+        }
+    });
 </script>
 
 
