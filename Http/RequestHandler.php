@@ -8,6 +8,27 @@ use Monarch\Data\JournalDataManager;
 // Read JSON from client
 $data = json_decode(file_get_contents('php://input'), true);
 
+if (isset($data['updateCell'])) {
+    $id    = (int)$data['updateCell']['id'];
+    $field = $data['updateCell']['field'];
+    $value = $data['updateCell']['value'];
+
+    if (!$id || !$field) {
+        echo json_encode(["success" => false, "error" => "Missing parameters"]);
+        exit;
+    }
+
+    try {
+        Monarch\Data\JournalDataManager::shared()->updateJournalCell($id, $field, $value);
+
+        echo json_encode(['status' => 'ok']);
+        exit;
+    } catch (Throwable $e) {
+        echo json_encode(['status' => 'error', 'message' => $e->getMessage()]);
+        exit;
+    }
+}
+
 if (isset($data['updateWidth'])) {
     $field = $data['updateWidth']['field'];
     $width = (int)$data['updateWidth']['width'];

@@ -106,6 +106,11 @@ class JournalDataManager extends DatabaseManager
      */
     public function getJournalEntries(array $columnList = []): array
     {
+        // Always include the primary key
+        if (!in_array('id', $columnList, true)) {
+            $columnList = array_merge(['id'], $columnList);
+        }
+        
         $columns = $columnList ? implode(', ', $columnList) : '*';
 
         $stmt = $this->pdo->query("SELECT {$columns} FROM trading_journal");
@@ -213,7 +218,27 @@ class JournalDataManager extends DatabaseManager
         ]);
     }
 
+    public function updateJournalCell(int $id, string $field, string $value): void {
+        // Safety: ensure field exists
+        $validFields = $this->visibleJournalFieldNames();
+        if (!in_array($field, $validFields, true)) {
+            throw new RuntimeException("Invalid field: $field");
+        }
+
+        $stmt = $this->pdo->prepare("
+            UPDATE trading_journal
+            SET $field = :value
+            WHERE id = :id
+        ");
+
+        $stmt->execute([
+            ':value' => $value,
+            ':id'    => $id
+        ]);
+    }
+
     public function getCheckOptions(string $fieldName): ?array {
+        // Pull CREATE TABLE statement
         $stmt = $this->pdo->prepare("
             SELECT sql 
             FROM sqlite_master 
@@ -222,22 +247,23 @@ class JournalDataManager extends DatabaseManager
         $stmt->execute();
 
         $createSql = $stmt->fetchColumn();
-
         if (!$createSql) return null;
 
-        // Pattern: CHECK(field IN ('a','b'))
-        $pattern = "/CHECK\s*\(\s*$fieldName\s+IN\s*\(([^)]*)\)\s*\)/i";
+        // Regex:
+        // CHECK(fieldName IN ('A','B','C'))
+        $pattern = "/CHECK\s*\(\s*{$fieldName}\s+IN\s*\(([^)]*)\)\s*\)/i";
 
-        if (preg_match($pattern, $createSql, $matches)) {
-
-            $list = $matches[1]; // "'a','b','c'"
-
-            return array_map(
-                fn($v) => trim($v, " '\""),
-                explode(",", $list)
-            );
+        if (!preg_match($pattern, $createSql, $matches)) {
+            return null; // This field has no CHECK constraint list
         }
 
-        return null; // No constraint
+        // List inside parentheses: `'A','B','C'`
+        $list = $matches[1];
+
+        // Split into array and trim quotes/spaces
+        return array_map(
+            fn($v) => trim($v, " '\"\t\n\r"),
+            explode(",", $list)
+        );
     }
 }

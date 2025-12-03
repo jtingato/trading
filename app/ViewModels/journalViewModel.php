@@ -11,6 +11,8 @@ class JournalViewModel
 {
     /** @var JournalField[] */
     public array $journalFields = [];
+    /** */
+    public array $dropdownFields = [];
 
     /** @var string[] field names in the correct order */
     public array $journalHeaderNames = [];
@@ -39,6 +41,13 @@ class JournalViewModel
     public function getJournalEntries(): void
     {
         $this->rows = $this->dataManager->getJournalEntries($this->journalHeaderNames);
+
+        foreach ($this->journalHeaderNames as $field) {
+            $opts = $this->dataManager->getCheckOptions($field);
+            if ($opts) {
+                $this->dropdownFields[$field] = $opts;
+            }
+        }
     }
 
     /**
