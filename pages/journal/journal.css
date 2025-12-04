@@ -208,3 +208,14 @@ th {
     box-shadow: 0 0 4px rgba(74, 144, 226, 0.5);
     outline: none;
 }
+
+.inline-select {
+    opacity: 0;
+    transform: scale(0.98);
+    transition: opacity 1000ms ease-out, transform 120ms ease-out;
+}
+
+.inline-select.show {
+    opacity: 1;
+    transform: scale(1);
+}

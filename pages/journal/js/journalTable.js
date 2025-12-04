@@ -192,6 +192,9 @@ document.addEventListener("DOMContentLoaded", () => {
         });
 
         cell.appendChild(select);
+        requestAnimationFrame(() => {
+            select.classList.add("show");
+        });
         select.focus();
 
         function finish(commit) {
