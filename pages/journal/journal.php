@@ -9,6 +9,8 @@ $viewModel = new JournalViewModel();
 $action = $_GET['action'] ?? '';
 ?>
 
+<link rel="stylesheet" href="/pages/journal/journal.css">
+
 <h2>Trading Journal</h2>
 
 <div class="journal-menu-wrapper">

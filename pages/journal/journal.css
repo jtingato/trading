@@ -138,3 +138,73 @@ th {
 		grid-template-columns: 1fr; /* single column on small screens */
 	}
 }
+
+/* ================================================
+   Journal Table Component Styles
+   (moved from journalTable.php)
+   ================================================ */
+
+.sortable-ghost {
+    opacity: 0.4;
+    background-color: #ccc;
+}
+
+th {
+    cursor: move;
+}
+
+/* Smooth color transitions */
+#journalTable td {
+    transition: background-color 0.3s ease;
+}
+
+/* Save states */
+#journalTable td.saving {
+    background-color: #fff4c4 !important; /* pale yellow */
+}
+
+#journalTable td.saved {
+    background-color: #d4ffd6 !important; /* pale green */
+}
+
+#journalTable td.error {
+    background-color: #ffd4d4 !important; /* pale red */
+}
+
+/* Inline editors */
+.inline-editor {
+    width: 100%;
+    display: block;
+}
+
+.inline-select {
+    width: 100%;
+    padding: 6px 10px;
+    font-size: 14px;
+    border: 1px solid #ccc;
+    border-radius: 6px;
+    background-color: #fff;
+    appearance: none; /* removes arrow on most browsers */
+    -webkit-appearance: none;
+    -moz-appearance: none;
+
+    background-image:
+        linear-gradient(45deg, transparent 50%, #666 50%),
+        linear-gradient(135deg, #666 50%, transparent 50%),
+        linear-gradient(to right, #ccc, #ccc);
+    background-position:
+        calc(100% - 18px) calc(50% - 4px),
+        calc(100% - 12px) calc(50% - 4px),
+        calc(100% - 2.5em) 0px;
+    background-size:
+        6px 6px,
+        6px 6px,
+        1px 100%;
+    background-repeat: no-repeat;
+}
+
+.inline-select:focus {
+    border-color: #4a90e2;
+    box-shadow: 0 0 4px rgba(74, 144, 226, 0.5);
+    outline: none;
+}

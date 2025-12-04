@@ -59,25 +59,3 @@ $displayNames = $viewModel->displayNamesFromFieldNames($fieldNames);
 <!-- SortableJS -->
 <script src="https://cdn.jsdelivr.net/npm/sortablejs@latest/Sortable.min.js"></script>
 <script src="/pages/journal/js/journalTable.js"></script>
-
-<style>
-    .sortable-ghost { opacity: 0.4; background-color: #ccc; }
-    th { cursor: move; }
-
-    #journalTable td { transition: background-color 0.3s ease; }
-
-    #journalTable td.saving {
-        background-color: #fff4c4 !important;
-    }
-
-    #journalTable td.saved {
-        background-color: #d4ffd6 !important;
-    }
-
-    #journalTable td.error {
-        background-color: #ffd4d4 !important;
-    }
-
-    .inline-editor { width: 100%; display: block; }
-    .inline-select { width: 100%; padding: 4px; }
-</style>
