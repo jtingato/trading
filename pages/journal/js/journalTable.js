@@ -176,64 +176,93 @@ document.addEventListener("DOMContentLoaded", () => {
             options = JSON.parse(cell.dataset.options || "[]");
         } catch (e) {
             console.error("Bad dropdown JSON:", e);
+            return;
         }
 
-        editor.style.display = "none";
+        // Hide editor while menu is open
+        editor.style.visibility = "hidden";
 
-        const select = document.createElement("select");
-        select.classList.add("inline-select");
+        // Create floating dropdown menu
+        const menu = document.createElement("div");
+        menu.className = "dropdown-menu";
 
         options.forEach(opt => {
-            const optionEl = document.createElement("option");
-            optionEl.value = opt;
-            optionEl.textContent = opt;
-            if (opt === originalValue) optionEl.selected = true;
-            select.appendChild(optionEl);
+            const item = document.createElement("div");
+            item.className = "dropdown-option";
+            item.textContent = opt;
+
+            item.addEventListener("click", () => {
+                pickOption(opt);
+            });
+
+            menu.appendChild(item);
         });
 
-        cell.appendChild(select);
-        requestAnimationFrame(() => {
-            select.classList.add("show");
-        });
-        select.focus();
+        // Append menu to body for perfect free-floating overlay
+        document.body.appendChild(menu);
 
-        function finish(commit) {
-            const newValue = select.value;
+        // Position floating menu at cell's coordinates
+        const rect = cell.getBoundingClientRect();
+        menu.style.left = rect.left + "px";
+        menu.style.top = rect.bottom + "px";
 
-            if (!commit || newValue === originalValue) {
-                teardown();
-                return;
-            }
+
+        /* --- Close menu helper --- */
+        function closeMenu(commit = false, newValue = originalValue) {
+            menu.remove();
+            editor.style.visibility = "";
+            cell.classList.remove("is-editing");
+
+            if (!commit) return;
 
             cell.classList.add("saving");
 
             sendUpdate(id, field, newValue)
                 .then(ok => {
                     cell.classList.remove("saving");
-                    if (!ok) {
-                        cell.classList.add("error");
-                    } else {
+
+                    if (ok) {
                         editor.textContent = newValue;
                         cell.classList.add("saved");
                         setTimeout(() => cell.classList.remove("saved"), 900);
+                    } else {
+                        cell.classList.add("error");
                     }
-                })
-                .finally(teardown);
+                });
         }
 
-        function teardown() {
-            select.remove();
-            editor.style.display = "";
-            cell.classList.remove("is-editing");
+
+        /* --- Option selection --- */
+        function pickOption(val) {
+            closeMenu(true, val);
         }
 
-        select.addEventListener("change", () => finish(true));
-        select.addEventListener("blur", () => finish(true));
-        select.addEventListener("keydown", e => {
-            if (e.key === "Escape") { e.preventDefault(); finish(false); }
-        });
+
+        /* --- Close dropdown when clicking outside --- */
+        function onClickOutside(e) {
+            if (!menu.contains(e.target) && !cell.contains(e.target)) {
+                closeMenu(false);
+            }
+        }
+
+        /* --- Close on Escape key --- */
+        function onEscape(e) {
+            if (e.key === "Escape") {
+                closeMenu(false);
+            }
+        }
+
+        document.addEventListener("mousedown", onClickOutside);
+        document.addEventListener("keydown", onEscape, { once: true });
+
+        // Clean up listeners when closing
+        const originalCloseMenu = closeMenu;
+        closeMenu = function(...args) {
+            document.removeEventListener("mousedown", onClickOutside);
+            document.removeEventListener("keydown", onEscape);
+            originalCloseMenu(...args);
+        };
     }
-
 
     /********************************************
      *  UTILITIES

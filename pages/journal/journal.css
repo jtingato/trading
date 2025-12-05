@@ -219,3 +219,32 @@ th {
     opacity: 1;
     transform: scale(1);
 }
+
+/* --- Custom Dropdown Menu --- */
+
+.dropdown-menu {
+    position: absolute;
+    background: #fff;
+    border: 1px solid #d0d0d0;
+    border-radius: 6px;
+    box-shadow: 0 4px 14px rgba(0,0,0,0.12);
+    min-width: 140px;
+    z-index: 9999;
+    padding: 4px 0;
+    animation: dropdownFade 100ms ease-out;
+}
+
+.dropdown-option {
+    padding: 8px 14px;
+    cursor: pointer;
+    font-size: 14px;
+}
+
+.dropdown-option:hover {
+    background-color: #eef5ff;
+}
+
+@keyframes dropdownFade {
+    from { opacity: 0; transform: translateY(-4px); }
+    to   { opacity: 1; transform: translateY(0); }
+}

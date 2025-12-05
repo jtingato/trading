@@ -1,7 +1,7 @@
 <?php
-declare(strict_types=1);
+    declare(strict_types=1);
 
-/** @var \Monarch\ViewModels\JournalViewModel $viewModel */
+    /** @var \Monarch\ViewModels\JournalViewModel $viewModel */
 ?>
 <div id="selectFieldsModal" class="modal-overlay" style="display:none;">
     <div class="modal-content">
