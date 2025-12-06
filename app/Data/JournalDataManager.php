@@ -41,9 +41,8 @@ class JournalDataManager extends DatabaseManager
         return $this->getPDO();
     }
 
-    /**
-     * Returns an array of *field names* in the order determined by the DB.
-     */
+
+    /** Return array of visible fields ordered */
     public function visibleJournalFieldNames(): array
     {
         $stmt = $this->pdo->prepare("
@@ -54,13 +53,11 @@ class JournalDataManager extends DatabaseManager
         ");
 
         $stmt->execute();
-
         return $stmt->fetchAll(PDO::FETCH_COLUMN);
     }
 
-    /**
-     * Return all field names in trading_journal via PRAGMA.
-     */
+
+    /** Return all actual DB column names */
     public function allJournalFieldNames(): array
     {
         $stmt = $this->pdo->query("PRAGMA table_info(trading_journal)");
@@ -74,9 +71,8 @@ class JournalDataManager extends DatabaseManager
         return $cols;
     }
 
-    /**
-     * Return ALL JournalField objects from journal_fields table.
-     */
+
+    /** Fetch all JournalField models */
     public function getJournalFields(): array
     {
         $stmt = $this->pdo->prepare("
@@ -101,22 +97,18 @@ class JournalDataManager extends DatabaseManager
         return $result;
     }
 
-    /**
-     * Returns rows from trading_journal in the specified column order.
-     */
+
+    /** Fetch trading_journal rows in the chosen order */
     public function getJournalEntries(array $columnList = []): array
     {
-        // Always include the primary key
         if (!in_array('id', $columnList, true)) {
             $columnList = array_merge(['id'], $columnList);
         }
-        
-        $columns = $columnList ? implode(', ', $columnList) : '*';
 
+        $columns = implode(', ', $columnList);
         $stmt = $this->pdo->query("SELECT {$columns} FROM trading_journal");
         $rows = $stmt->fetchAll(PDO::FETCH_ASSOC);
 
-        // Format exec_time
         foreach ($rows as &$entry) {
             if (!empty($entry['exec_time'])) {
                 $date = new DateTime($entry['exec_time']);
@@ -129,30 +121,22 @@ class JournalDataManager extends DatabaseManager
         return $rows;
     }
 
-    /**
-     * Save updated visibility + display names + ordering for all fields of a user.
-     */
+
+    /** Save field list + visibility */
     public function saveJournalFieldNamesAndVisibility(string $userId, array $fields): void
     {
-        if (!$userId) {
-            throw new RuntimeException("No user ID provided");
-        }
-
-        if (empty($fields)) {
-            throw new RuntimeException("No fields provided");
-        }
+        if (!$userId) throw new RuntimeException("No user ID provided");
+        if (empty($fields)) throw new RuntimeException("No fields provided");
 
         $this->pdo->beginTransaction();
 
         try {
-            // Clear old fields
             $del = $this->pdo->prepare("DELETE FROM journal_fields WHERE user_id = :uid");
             $del->execute([':uid' => $userId]);
 
-            // Insert new values
             $insert = $this->pdo->prepare("
                 INSERT INTO journal_fields (field_name, user_id, display_name, ordering, is_visible, width)
-                VALUES (:field, :uid, :name, :ord, :vis)
+                VALUES (:field, :uid, :name, :ord, :vis, :width)
             ");
 
             foreach ($fields as $f) {
@@ -168,15 +152,14 @@ class JournalDataManager extends DatabaseManager
 
             $this->pdo->commit();
 
-        } catch (PDOException $e) {
+        } catch (Throwable $e) {
             $this->pdo->rollBack();
             throw new RuntimeException("Failed to save journal fields: " . $e->getMessage());
         }
     }
 
-    /**
-     * NEW: Save column ordering using FIELD NAMES only.
-     */
+
+    /** Save column ordering */
     public function updateColumnOrdering(array $orderedFieldNames): void
     {
         $this->pdo->beginTransaction();
@@ -205,6 +188,7 @@ class JournalDataManager extends DatabaseManager
         }
     }
 
+
     public function updateColumnWidth(string $fieldName, int $width): void {
         $stmt = $this->pdo->prepare("
             UPDATE journal_fields
@@ -218,9 +202,11 @@ class JournalDataManager extends DatabaseManager
         ]);
     }
 
+
+    /** Update a journal cell value */
     public function updateJournalCell(int $id, string $field, string $value): void {
-        // Safety: ensure field exists
-        $validFields = $this->visibleJournalFieldNames();
+        $validFields = $this->allJournalFieldNames(); // <-- FIXED
+
         if (!in_array($field, $validFields, true)) {
             throw new RuntimeException("Invalid field: $field");
         }
@@ -237,33 +223,38 @@ class JournalDataManager extends DatabaseManager
         ]);
     }
 
-    public function getCheckOptions(string $fieldName): ?array {
-        // Pull CREATE TABLE statement
+
+
+    /* ------------------------------ */
+    /* Dropdown Options Storage (NEW) */
+    /* ------------------------------ */
+
+    public function getDropdownOptions(string $fieldName): array
+    {
         $stmt = $this->pdo->prepare("
-            SELECT sql 
-            FROM sqlite_master 
-            WHERE type='table' AND name='trading_journal'
+            SELECT option_value 
+            FROM journal_dropdown_options 
+            WHERE field_name = :f 
+            ORDER BY option_value ASC
         ");
-        $stmt->execute();
+        $stmt->execute([':f' => $fieldName]);
 
-        $createSql = $stmt->fetchColumn();
-        if (!$createSql) return null;
+        return $stmt->fetchAll(PDO::FETCH_COLUMN) ?: [];
+    }
 
-        // Regex:
-        // CHECK(fieldName IN ('A','B','C'))
-        $pattern = "/CHECK\s*\(\s*{$fieldName}\s+IN\s*\(([^)]*)\)\s*\)/i";
-
-        if (!preg_match($pattern, $createSql, $matches)) {
-            return null; // This field has no CHECK constraint list
+    public function addDropdownOption(string $field, string $value): bool
+    {
+        try {
+            $stmt = $this->pdo->prepare("
+                INSERT OR IGNORE INTO journal_dropdown_options (field_name, option_value)
+                VALUES (:field, :value)
+            ");
+            return $stmt->execute([
+                ':field' => $field,
+                ':value' => $value
+            ]);
+        } catch (Throwable $e) {
+            return false;
         }
-
-        // List inside parentheses: `'A','B','C'`
-        $list = $matches[1];
-
-        // Split into array and trim quotes/spaces
-        return array_map(
-            fn($v) => trim($v, " '\"\t\n\r"),
-            explode(",", $list)
-        );
     }
 }

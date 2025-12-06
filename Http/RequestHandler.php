@@ -14,7 +14,10 @@ if (isset($data['updateCell'])) {
     $value = $data['updateCell']['value'];
 
     if (!$id || !$field) {
-        echo json_encode(["success" => false, "error" => "Missing parameters"]);
+        echo json_encode([
+            'status'  => 'error',
+            'message' => 'Missing parameters'
+        ]);
         exit;
     }
 
@@ -49,4 +52,15 @@ if (isset($data['columnOrder']) && is_array($data['columnOrder'])) {
             'message' => $e->getMessage()
         ]);
     }
+}
+
+if (isset($data['addDropdownOption'])) {
+    $field = $data['addDropdownOption']['field'];
+    $value = $data['addDropdownOption']['value'];
+
+    $ok = Monarch\Data\JournalDataManager::shared()
+        ->addDropdownOption($field, $value);
+
+    echo json_encode(['status' => $ok ? 'ok' : 'error']);
+    exit;
 }

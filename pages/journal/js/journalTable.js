@@ -12,7 +12,6 @@ document.addEventListener("DOMContentLoaded", () => {
             animation: 150,
             handle: ".drag-icon",
             ghostClass: "sortable-ghost",
-
             onEnd: function () {
                 const ths = Array.from(headerRow.children);
                 const newOrder = ths.map(th => th.dataset.field);
@@ -83,8 +82,6 @@ document.addEventListener("DOMContentLoaded", () => {
     /********************************************
      *  INLINE EDITING SYSTEM
      ********************************************/
-    
-    // Central click handler for text & dropdown editing
     table.addEventListener("click", event => {
         const cell = event.target.closest("td");
         if (!cell || !cell.closest("tbody")) return;
@@ -102,18 +99,16 @@ document.addEventListener("DOMContentLoaded", () => {
      ***********************/
     function startTextEdit(cell) {
         const editor = cell.querySelector(".inline-editor");
-        if (!editor) return;
+        const originalValue = editor.textContent.trim();
 
         cell.classList.add("is-editing");
-
-        const originalValue = editor.textContent.trim();
         editor.setAttribute("contenteditable", "true");
         editor.focus();
         placeCaretAtEnd(editor);
 
         function onKeydown(e) {
             if (e.key === "Enter") { e.preventDefault(); editor.blur(); }
-            if (e.key === "Escape") { e.preventDefault(); cancel(); }
+            if (e.key === "Escape") cancel();
         }
 
         function onBlur() { save(); }
@@ -138,8 +133,6 @@ document.addEventListener("DOMContentLoaded", () => {
             if (newValue === originalValue) return cleanup();
 
             const { id, field } = getCellMeta(cell);
-            if (!id || !field) return cleanup();
-
             cell.classList.add("saving");
 
             sendUpdate(id, field, newValue)
@@ -163,51 +156,74 @@ document.addEventListener("DOMContentLoaded", () => {
      ***********************/
     function startDropdownEdit(cell) {
         const editor = cell.querySelector(".inline-editor");
-        if (!editor) return;
-
-        cell.classList.add("is-editing");
-
         const originalValue = editor.textContent.trim();
         const { id, field } = getCellMeta(cell);
-        if (!id || !field) return;
 
-        let options = [];
-        try {
-            options = JSON.parse(cell.dataset.options || "[]");
-        } catch (e) {
-            console.error("Bad dropdown JSON:", e);
-            return;
-        }
+        let options = JSON.parse(cell.dataset.options || "[]");
 
-        // Hide editor while menu is open
+        cell.classList.add("is-editing");
         editor.style.visibility = "hidden";
 
-        // Create floating dropdown menu
         const menu = document.createElement("div");
         menu.className = "dropdown-menu";
 
+        /* Existing options */
         options.forEach(opt => {
             const item = document.createElement("div");
             item.className = "dropdown-option";
             item.textContent = opt;
-
-            item.addEventListener("click", () => {
-                pickOption(opt);
-            });
-
+            item.addEventListener("click", () => pickOption(opt));
             menu.appendChild(item);
         });
 
-        // Append menu to body for perfect free-floating overlay
+        /* Create new option row */
+        const newRow = document.createElement("div");
+        newRow.className = "dropdown-new-option";
+        newRow.textContent = "➕ Create new option…";
+        newRow.addEventListener("click", showNewOptionInput);
+        menu.appendChild(newRow);
+
         document.body.appendChild(menu);
 
-        // Position floating menu at cell's coordinates
         const rect = cell.getBoundingClientRect();
         menu.style.left = rect.left + "px";
         menu.style.top = rect.bottom + "px";
 
+        function showNewOptionInput() {
+            const wrapper = document.createElement("div");
 
-        /* --- Close menu helper --- */
+            const input = document.createElement("input");
+            input.className = "dropdown-new-input";
+            input.placeholder = "Enter new option…";
+
+            wrapper.appendChild(input);
+            newRow.replaceWith(wrapper);
+
+            input.focus();
+
+            input.addEventListener("keydown", e => {
+                if (e.key === "Enter") {
+                    const val = input.value.trim();
+                    if (val !== "") pickOption(val, true);
+                }
+                if (e.key === "Escape") closeMenu(false);
+            });
+        }
+
+        function pickOption(val, isNew = false) {
+
+            if (isNew) {
+                saveDropdownOption(field, val).then(ok => {
+                    if (ok) {
+                        options.push(val);
+                        cell.dataset.options = JSON.stringify(options);
+                    }
+                });
+            }
+
+            closeMenu(true, val);
+        }
+
         function closeMenu(commit = false, newValue = originalValue) {
             menu.remove();
             editor.style.visibility = "";
@@ -220,7 +236,6 @@ document.addEventListener("DOMContentLoaded", () => {
             sendUpdate(id, field, newValue)
                 .then(ok => {
                     cell.classList.remove("saving");
-
                     if (ok) {
                         editor.textContent = newValue;
                         cell.classList.add("saved");
@@ -231,54 +246,95 @@ document.addEventListener("DOMContentLoaded", () => {
                 });
         }
 
-
-        /* --- Option selection --- */
-        function pickOption(val) {
-            closeMenu(true, val);
-        }
-
-
-        /* --- Close dropdown when clicking outside --- */
-        function onClickOutside(e) {
-            if (!menu.contains(e.target) && !cell.contains(e.target)) {
-                closeMenu(false);
-            }
-        }
-
-        /* --- Close on Escape key --- */
-        function onEscape(e) {
-            if (e.key === "Escape") {
-                closeMenu(false);
-            }
-        }
-
-        document.addEventListener("mousedown", onClickOutside);
-        document.addEventListener("keydown", onEscape, { once: true });
-
-        // Clean up listeners when closing
-        const originalCloseMenu = closeMenu;
-        closeMenu = function(...args) {
-            document.removeEventListener("mousedown", onClickOutside);
-            document.removeEventListener("keydown", onEscape);
-            originalCloseMenu(...args);
-        };
+        document.addEventListener("mousedown", e => {
+            if (!menu.contains(e.target) && !cell.contains(e.target)) closeMenu(false);
+        }, { once: true });
     }
+
 
     /********************************************
      *  UTILITIES
      ********************************************/
     function sendUpdate(id, field, value) {
+        console.log("🔵 sendUpdate()", { id, field, value });
+
+        return fetch("/Http/RequestHandler.php", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ updateCell: { id, field, value } })
+        })
+        .then(async (r) => {
+            const text = await r.text();
+            console.log("🔵 RAW RESPONSE:", text);
+
+            let data;
+            try {
+                data = JSON.parse(text);
+            } catch (e) {
+                console.error("❌ JSON parse error:", e);
+                alert("Save failed: bad JSON response from server");
+                return false;
+            }
+
+            console.log("🔵 Parsed JSON:", data);
+
+            if (!data || data.status !== "ok") {
+                console.error("❌ Server error:", data);
+                if (data && data.message) {
+                    alert("Save failed: " + data.message);
+                } else {
+                    alert("Save failed: unknown server error");
+                }
+                return false;
+            }
+
+            return true;
+        })
+        .catch(err => {
+            console.error("❌ Network or fetch error:", err);
+            alert("Save failed: network or server error");
+            return false;
+        });
+    }
+
+    function saveDropdownOption(field, value) {
+        console.log("🔵 saveDropdownOption()", { field, value });
+
         return fetch("/Http/RequestHandler.php", {
             method: "POST",
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify({
-                updateCell: { id, field, value }
+                addDropdownOption: { field, value }
             })
         })
-        .then(r => r.json())
-        .then(d => d?.status === "ok")
+        .then(async (r) => {
+            const text = await r.text();
+            console.log("🔵 RAW DROPDOWN RESPONSE:", text);
+
+            let data;
+            try {
+                data = JSON.parse(text);
+            } catch (e) {
+                console.error("❌ JSON parse error (dropdown):", e);
+                alert("Failed to save dropdown option: bad JSON response");
+                return false;
+            }
+
+            if (!data || data.status !== "ok") {
+                console.error("❌ Dropdown save error:", data);
+                if (data && data.message) {
+                    alert("Failed to save dropdown option: " + data.message);
+                } else {
+                    alert("Failed to save dropdown option");
+                }
+                return false;
+            }
+
+            return true;
+        })
         .catch(err => {
-            console.error("Update error:", err);
+            console.error("❌ Dropdown option save error:", err);
+            alert("Failed to save dropdown option: network/server error");
             return false;
         });
     }
@@ -292,9 +348,9 @@ document.addEventListener("DOMContentLoaded", () => {
 
     function placeCaretAtEnd(el) {
         const range = document.createRange();
-        const sel = window.getSelection();
         range.selectNodeContents(el);
         range.collapse(false);
+        const sel = window.getSelection();
         sel.removeAllRanges();
         sel.addRange(range);
     }

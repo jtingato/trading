@@ -42,11 +42,8 @@ class JournalViewModel
     {
         $this->rows = $this->dataManager->getJournalEntries($this->journalHeaderNames);
 
-        foreach ($this->journalHeaderNames as $field) {
-            $opts = $this->dataManager->getCheckOptions($field);
-            if ($opts) {
-                $this->dropdownFields[$field] = $opts;
-            }
+        foreach ($this->journalHeaderNames as $fieldName) {
+            $this->dropdownFields[$fieldName] = $this->dataManager->getDropdownOptions($fieldName);
         }
     }
 
@@ -114,22 +111,6 @@ class JournalViewModel
     }
 
     /**
-     * DISPLAY NAME → FIELD NAME (only used for settings UI)
-     */
-    public function fieldNameFromDisplayName(string $display): ?string
-    {
-        foreach ($this->journalFields as $jf) {
-            if (
-                $jf->displayName === $display ||
-                $jf->fieldName === $display
-            ) {
-                return $jf->fieldName;
-            }
-        }
-        return null;
-    }
-
-    /**
      * Array of FIELD NAMES → Array of DISPLAY NAMES
      */
     public function displayNamesFromFieldNames(array $fieldNames): array
@@ -137,22 +118,4 @@ class JournalViewModel
         return array_map(fn($f) => $this->displayNameFromFieldName($f), $fieldNames);
     }
 
-    /**
-     * Array of DISPLAY NAMES → Array of FIELD NAMES
-     */
-    public function fieldNamesFromDisplayNames(array $displayNames): array
-    {
-        $out = [];
-        foreach ($displayNames as $d) {
-            $field = $this->fieldNameFromDisplayName($d);
-            if ($field) {
-                $out[] = $field;
-            }
-        }
-        return $out;
-    }
-
-    public function optionsForFieldName(string $fieldName): ?array {
-        return $this->dataManager->getCheckOptions($fieldName);
-    }
 }

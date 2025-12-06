@@ -35,12 +35,12 @@ $displayNames = $viewModel->displayNamesFromFieldNames($fieldNames);
             <tr data-row-id="<?= $row['id'] ?>">
                 <?php foreach ($fieldNames as $field): ?>
                     <td 
+                        data-id="<?= (int)$row['id'] ?>"
                         data-field="<?= htmlspecialchars($field) ?>"
-                        data-id="<?= htmlspecialchars((string)($row['id']), ENT_QUOTES) ?>"
                         data-has-dropdown="<?= isset($viewModel->dropdownFields[$field]) ? '1' : '0' ?>"
-                        data-options="<?= isset($viewModel->dropdownFields[$field]) 
-                            ? htmlspecialchars(json_encode($viewModel->dropdownFields[$field]), ENT_QUOTES) 
-                            : '' ?>"
+                        data-options='<?= isset($viewModel->dropdownFields[$field]) 
+                            ? json_encode($viewModel->dropdownFields[$field]) 
+                            : "[]" ?>'
                     >
                         <div 
                             class="inline-editor"
