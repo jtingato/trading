@@ -59,3 +59,4 @@ $displayNames = $viewModel->displayNamesFromFieldNames($fieldNames);
 <!-- SortableJS -->
 <script src="https://cdn.jsdelivr.net/npm/sortablejs@latest/Sortable.min.js"></script>
 <script src="/pages/journal/js/journalTable.js"></script>
+

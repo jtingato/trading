@@ -8,6 +8,7 @@ use Monarch\Data\JournalDataManager;
 // Read JSON from client
 $data = json_decode(file_get_contents('php://input'), true);
 
+/** UpdateCell */
 if (isset($data['updateCell'])) {
     $id    = (int)$data['updateCell']['id'];
     $field = $data['updateCell']['field'];

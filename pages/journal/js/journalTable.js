@@ -354,4 +354,19 @@ document.addEventListener("DOMContentLoaded", () => {
         sel.removeAllRanges();
         sel.addRange(range);
     }
+
+
+    function preloadDropdowns() {
+        const assetTypes = document.getElementById("new-asset-type");
+        const sides = document.getElementById("new-side");
+        const brokers = document.getElementById("new-broker");
+
+        if (assetTypes) assetTypes.innerHTML = buildOptions(["stock", "option", "future", "crypto"]);
+        if (sides) sides.innerHTML = buildOptions(["buy", "sell"]);
+        if (brokers) brokers.innerHTML = buildOptions(["Schwab", "IBKR", "e-Trade", "Webull", "Robinhood", "Coinbase"]);
+    }
+
+    function buildOptions(list) {
+        return list.map(v => `<option value="${v}">${v}</option>`).join("");
+    }
 });
