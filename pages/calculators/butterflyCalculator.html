@@ -1,0 +1,463 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Butterfly P/L Calculator</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
+<link rel="stylesheet" href="/pages/calculators/butterflyCalculator.css">
+</head>
+<body>
+<div class="container">
+<header>
+  <h1>⬡ Butterfly P/L Calculator</h1>
+  <span>Up to 10 positions · XSP · SPX · Any underlying</span>
+</header>
+<div style="display:flex;align-items:center;gap:12px;margin-bottom:1.25rem;flex-wrap:wrap">
+  <span style="font-family:var(--font-mono);font-size:0.7rem;color:var(--muted);text-transform:uppercase;letter-spacing:0.08em">P/L Mode:</span>
+  <div style="display:flex;background:var(--surface);border:1px solid var(--border2);border-radius:6px;overflow:hidden">
+    <div id="mode-expiry" onclick="setMode('expiry')" style="padding:6px 14px;font-family:var(--font-mono);font-size:0.72rem;cursor:pointer;transition:all 0.15s">At Expiry</div>
+    <div id="mode-estimated" onclick="setMode('estimated')" style="padding:6px 14px;font-family:var(--font-mono);font-size:0.72rem;cursor:pointer;transition:all 0.15s">Estimated</div>
+    <div id="mode-blackscholes" onclick="setMode('blackscholes')" style="padding:6px 14px;font-family:var(--font-mono);font-size:0.72rem;cursor:pointer;transition:all 0.15s">Black-Scholes</div>
+  </div>
+  <span id="mode-desc" style="font-size:0.68rem;color:var(--muted);font-family:var(--font-mono)">Intrinsic value at expiration</span>
+</div>
+<div class="close-row" style="grid-template-columns:repeat(auto-fit,minmax(130px,1fr))">
+  <div class="input-group">
+    <label style="display:flex;align-items:center;gap:6px">
+      <span>Current price</span>
+      <input type="text" id="ticker-input" value="^XSP" style="font-family:var(--font-mono);font-size:0.65rem;width:64px;background:var(--surface);border:1px solid var(--border2);border-radius:4px;color:var(--text);padding:2px 5px;text-transform:uppercase" onkeydown="if(event.key==='Enter')fetchXSP()" />
+      <span id="fetch-xsp-btn" onclick="fetchXSP()" style="color:var(--profit);cursor:pointer;font-size:0.65rem;font-family:var(--font-mono)">⟳ Fetch</span>
+      <span id="fetch-xsp-msg" style="font-size:0.65rem;font-family:var(--font-mono);color:var(--muted)"></span>
+    </label>
+    <div style="display:flex;gap:6px;align-items:center">
+      <input type="number" id="close" value="751.91" step="0.01" style="flex:1" />
+      <button onclick="clearAll()" style="font-family:var(--font-mono);font-size:0.7rem;padding:0.6rem 0.85rem;background:transparent;border:1px solid var(--loss);border-radius:6px;color:var(--loss);cursor:pointer;white-space:nowrap;transition:all 0.15s" onmouseover="this.style.background='rgba(244,63,94,0.12)'" onmouseout="this.style.background='transparent'">Clear All Positions</button>
+    </div>
+  </div>
+  <div class="input-group" id="time-group" style="display:none">
+    <label>Current time (ET) &nbsp;<span id="auto-time-btn" onclick="autoTime()" style="color:var(--profit);cursor:pointer;font-size:0.65rem">⟳ now</span></label>
+    <input type="time" id="tradetime" value="10:30" style="font-family:var(--font-mono)" />
+  </div>
+  <div class="input-group" id="iv-group" style="display:none">
+    <label>IV % (e.g. 17.5)</label>
+    <input type="number" id="iv" value="17.5" step="0.1" min="0.1" />
+  </div>
+  <div class="input-group" id="rate-group" style="display:none">
+    <label>Risk-free rate %</label>
+    <input type="number" id="rfrate" value="5.25" step="0.05" />
+  </div>
+</div>
+<div id="pricing-info" style="font-size:0.68rem;font-family:var(--font-mono);color:var(--muted);margin:-0.5rem 0 1.25rem;padding:6px 10px;background:var(--surface);border-radius:6px;border:1px solid var(--border);display:none"></div>
+<div class="fly-tabs" id="tabs"></div>
+<div id="panels"></div>
+<div class="section-label" style="margin-bottom:0.75rem">Summary — all active positions</div>
+<div class="summary-grid" id="summary"></div>
+<div class="fly-results" id="fly-results"></div>
+<div class="chart-card">
+  <div class="section-label">Combined P/L curve at expiration</div>
+  <canvas id="plChart" height="160"></canvas>
+  <div class="legend" id="legend"></div>
+</div>
+<footer>Butterfly P/L Calculator &nbsp;·&nbsp; For educational purposes only &nbsp;·&nbsp; Not financial advice</footer>
+</div>
+<script>
+const COLORS = ['#00d4aa','#3b82f6','#f59e0b','#e879f9','#f87171','#34d399','#60a5fa','#fbbf24','#a78bfa','#fb923c'];
+const NAMES  = ['Fly 1','Fly 2','Fly 3','Fly 4','Fly 5','Fly 6','Fly 7','Fly 8','Fly 9','Fly 10'];
+const BLANK = { upper:0, middle:0, lower:0, premium:0, contracts:0, enabled:true, tosString:'' };
+const ALL_DEFAULTS = Array.from({length:10}, () => ({...BLANK}));
+const DEFAULTS = ALL_DEFAULTS.slice(0, 4);
+let visibleTabs = 4;
+const MAX_TABS = 10;
+let activeTab = 0;
+let chart;
+let pricingMode = 'expiry';
+function setMode(m) {
+  pricingMode = m;
+  const descs = { expiry:'Intrinsic value at expiration', estimated:'Theta-decay estimate based on time of day', blackscholes:'Black-Scholes theoretical value (requires IV)' };
+  ['expiry','estimated','blackscholes'].forEach(id => {
+    const el = document.getElementById('mode-' + id);
+    if (el) { el.style.background = id===m?'var(--profit)':'transparent'; el.style.color = id===m?'#000':'var(--muted)'; el.style.fontWeight = id===m?'600':'400'; }
+  });
+  document.getElementById('mode-desc').textContent = descs[m];
+  document.getElementById('time-group').style.display  = m!=='expiry'?'':'none';
+  document.getElementById('iv-group').style.display    = m==='blackscholes'?'':'none';
+  document.getElementById('rate-group').style.display  = m==='blackscholes'?'':'none';
+  document.getElementById('pricing-info').style.display = m!=='expiry'?'':'none';
+  calc();
+}
+function autoTime() {
+  const now = new Date();
+  const et = new Date(now.toLocaleString('en-US',{timeZone:'America/New_York'}));
+  document.getElementById('tradetime').value = String(et.getHours()).padStart(2,'0')+':'+String(et.getMinutes()).padStart(2,'0');
+  calc();
+}
+const MARKET_OPEN=9*60+30, MARKET_CLOSE=16*60, MARKET_MINS=MARKET_CLOSE-MARKET_OPEN;
+function timeToMins(t) { const [h,m]=t.split(':').map(Number); return h*60+m; }
+function fractionElapsed(t) { return Math.max(0,Math.min(MARKET_MINS,timeToMins(t)-MARKET_OPEN))/MARKET_MINS; }
+function estimatedButterflyValue(d,price,t) {
+  const width=d.upper-d.middle;
+  const intr=Math.max(0,d.upper-price)-2*Math.max(0,d.middle-price)+Math.max(0,d.lower-price);
+  const rem=Math.pow(1-fractionElapsed(t),1.5);
+  const raw=Math.max(intr,intr+width*0.35*rem);
+  return Math.min(Math.max(0,raw),width);
+}
+function normCDF(x) {
+  const a1=0.254829592,a2=-0.284496736,a3=1.421413741,a4=-1.453152027,a5=1.061405429,p=0.3275911;
+  const sign=x<0?-1:1; x=Math.abs(x)/Math.sqrt(2);
+  const t=1/(1+p*x);
+  return 0.5*(1+sign*(1-(((((a5*t+a4)*t)+a3)*t+a2)*t+a1)*t*Math.exp(-x*x)));
+}
+function bsPut(S,K,T,r,sigma) {
+  if(T<=0) return Math.max(0,K-S);
+  const d1=(Math.log(S/K)+(r+sigma*sigma/2)*T)/(sigma*Math.sqrt(T)),d2=d1-sigma*Math.sqrt(T);
+  return K*Math.exp(-r*T)*normCDF(-d2)-S*normCDF(-d1);
+}
+function bsButterflyValue(d,price,t,iv,rate) {
+  const width=d.upper-d.middle;
+  const T=Math.max(0,(1-fractionElapsed(t))/252),r=rate/100,s=iv/100;
+  const raw=bsPut(price,d.upper,T,r,s)-2*bsPut(price,d.middle,T,r,s)+bsPut(price,d.lower,T,r,s);
+  return Math.min(Math.max(0,raw),width);
+}
+function flyCalcWithMode(d,price) {
+  const base=flyCalc(d,price);
+  if(pricingMode==='expiry') return {...base,theoretical:null,theoPL:null};
+  const t=document.getElementById('tradetime')?.value||'10:30';
+  const iv=parseFloat(document.getElementById('iv')?.value)||17.5;
+  const rate=parseFloat(document.getElementById('rfrate')?.value)||5.25;
+  const theoValue=pricingMode==='estimated'?estimatedButterflyValue(d,price,t):bsButterflyValue(d,price,t,iv,rate);
+  const rawTheoPL=(theoValue-d.premium)*100*d.contracts;
+  const maxTheoPL=base.maxProfit*d.contracts;
+  const minTheoPL=-(base.maxLoss*d.contracts);
+  const theoPL=Math.min(Math.max(rawTheoPL,minTheoPL),maxTheoPL);
+  return {...base,theoretical:theoValue,theoPL};
+}
+function addTab() {
+  if (visibleTabs >= MAX_TABS) return;
+  const next = ALL_DEFAULTS[visibleTabs];
+  DEFAULTS.push({ ...next });
+  visibleTabs++;
+  activeTab = visibleTabs - 1;
+  buildUI();
+  calc();
+}
+function deleteTab(i) {
+  if (visibleTabs <= 1) return;
+  DEFAULTS.splice(i, 1);
+  visibleTabs--;
+  if (activeTab >= visibleTabs) activeTab = visibleTabs - 1;
+  else if (activeTab > i) activeTab--;
+  buildUI();
+  calc();
+}
+function buildUI() {
+  const tabsEl=document.getElementById('tabs'),panelsEl=document.getElementById('panels');
+  tabsEl.innerHTML=''; panelsEl.innerHTML='';
+  for (let i = 0; i < visibleTabs; i++) {
+    const d = DEFAULTS[i];
+    const tab=document.createElement('div');
+    tab.className='fly-tab'+(i===activeTab?' active':'');
+    tab.style.cssText='display:flex;align-items:center;gap:6px;padding-right:6px';
+    tab.innerHTML=`<span class="dot" style="background:${COLORS[i]}"></span>${NAMES[i]}${visibleTabs>1?`<span class="tab-close" onclick="event.stopPropagation();deleteTab(${i})" title="Remove">×</span>`:''}`;
+    tab.onclick=()=>{activeTab=i;buildUI();calc();};
+    tabsEl.appendChild(tab);
+    const panel=document.createElement('div');
+    panel.className='fly-panel'+(i===activeTab?' active':'');
+    panel.innerHTML=`
+      <div class="input-group" style="margin-bottom:1rem">
+        <label>Paste TOS trade string</label>
+        <input type="text" id="tos${i}" value="${d.tosString||''}" placeholder="" style="font-size:0.78rem;color:var(--muted)" oninput="DEFAULTS[${i}].tosString=this.value;parseTOS(${i},this.value)" />
+        <span id="tos-msg${i}" style="font-size:0.68rem;font-family:var(--font-mono);height:14px;display:block;margin-top:3px"></span>
+      </div>
+      <div class="fly-enable">
+        <input type="checkbox" id="en${i}" ${d.enabled?'checked':''} onchange="DEFAULTS[${i}].enabled=this.checked;calc();" />
+        <label for="en${i}">Include this position in calculations</label>
+      </div>
+      <div style="display:flex;gap:1rem;margin-bottom:1rem">
+        <div class="input-group" style="width:130px"><label>Contracts</label><input type="number" id="c${i}" value="${d.contracts||''}" placeholder="0" step="1" min="0" oninput="DEFAULTS[${i}].contracts=+this.value;generateTOS(${i});calc();" /></div>
+      </div>
+      <div style="display:flex;gap:1rem;margin-bottom:1rem;flex-wrap:wrap">
+        <div class="input-group" style="flex:1;min-width:100px"><label>Upper strike</label><input type="number" id="u${i}" value="${d.upper||''}" placeholder="0.00" step="0.5" oninput="DEFAULTS[${i}].upper=+this.value;generateTOS(${i});calc();" /></div>
+        <div class="input-group" style="flex:1;min-width:100px"><label>Middle strike</label><input type="number" id="m${i}" value="${d.middle||''}" placeholder="0.00" step="0.5" oninput="DEFAULTS[${i}].middle=+this.value;generateTOS(${i});calc();" /></div>
+        <div class="input-group" style="flex:1;min-width:100px"><label>Lower strike</label><input type="number" id="l${i}" value="${d.lower||''}" placeholder="0.00" step="0.5" oninput="DEFAULTS[${i}].lower=+this.value;generateTOS(${i});calc();" /></div>
+      </div>
+      <div style="display:flex;gap:1rem;flex-wrap:wrap">
+        <div class="input-group" style="flex:1;min-width:130px"><label>Premium paid ($)</label><input type="number" id="p${i}" value="${d.premium||''}" placeholder="0.00" step="0.01" oninput="DEFAULTS[${i}].premium=+this.value;generateTOS(${i});calc();" /></div>
+        <div class="input-group" style="flex:1;min-width:130px"><label>Premium close</label><input type="number" id="pclose${i}" readonly placeholder="—" style="opacity:0.65;cursor:default;border-color:var(--border)" /></div>
+      </div>`;
+    panelsEl.appendChild(panel);
+    if(d.tosString) parseTOS(i, d.tosString, true);
+  }
+  if (visibleTabs < MAX_TABS) {
+    const addTab_btn=document.createElement('div');
+    addTab_btn.className='fly-tab';
+    addTab_btn.title='Add position';
+    addTab_btn.innerHTML=`<span style="font-size:1rem;line-height:1;color:var(--profit)">+</span>`;
+    addTab_btn.onclick=addTab;
+    tabsEl.appendChild(addTab_btn);
+  }
+  const totalsTab=document.createElement('div');
+  totalsTab.className='fly-tab'+(activeTab===10?' active':'');
+  totalsTab.innerHTML=`<span class="dot" style="background:#fff;opacity:0.6"></span>Totals`;
+  totalsTab.onclick=()=>{activeTab=10;buildUI();calc();};
+  tabsEl.appendChild(totalsTab);
+  const totalsPanel=document.createElement('div');
+  totalsPanel.className='fly-panel'+(activeTab===10?' active':'');
+  totalsPanel.id='totals-panel';
+  panelsEl.appendChild(totalsPanel);
+}
+function generateTOS(i) {
+  const d = DEFAULTS[i];
+  if (!d.upper || !d.middle || !d.lower || !d.premium || !d.contracts) return;
+  const tos = `BOT ${d.contracts} ${d.upper}/${d.middle}/${d.lower} @${d.premium.toFixed(2)}`;
+  d.tosString = tos;
+  const el = document.getElementById('tos' + i);
+  if (el) el.value = tos;
+  const msg = document.getElementById('tos-msg' + i);
+  if (msg) { msg.textContent = ''; }
+}
+function flyCalc(d,close) {
+  const {upper,middle,lower,premium,contracts}=d;
+  if(!contracts||!upper||!middle||!lower) return {exitValue:0,plShare:0,plContract:0,totalPL:0,maxProfit:0,maxLoss:0,beLow:0,beHigh:0,inZone:false,returnPct:0,width:0,empty:true};
+  const width=upper-middle;
+  const exitValue=Math.max(0,upper-close)-2*Math.max(0,middle-close)+Math.max(0,lower-close);
+  const plShare=exitValue-premium,plContract=plShare*100,totalPL=plContract*contracts;
+  const maxProfit=(width-premium)*100,maxLoss=premium*100;
+  const beLow=lower+premium,beHigh=upper-premium;
+  const inZone=close>=beLow&&close<=beHigh;
+  const returnPct=maxLoss>0?(totalPL/(maxLoss*contracts))*100:0;
+  return {exitValue,plShare,plContract,totalPL,maxProfit,maxLoss,beLow,beHigh,inZone,returnPct,width};
+}
+function fmt(v){return(v>=0?'+':'-')+'$'+Math.abs(v).toFixed(2);}
+function pc(v){return v>=0?'profit':'loss';}
+function calc() {
+  const close=parseFloat(document.getElementById('close').value)||0;
+  const active=DEFAULTS.filter(d=>d.enabled&&d.contracts&&d.upper&&d.middle&&d.lower);
+  const timeStr=document.getElementById('tradetime')?.value||'10:30';
+  const iv=parseFloat(document.getElementById('iv')?.value)||17.5;
+  const rate=parseFloat(document.getElementById('rfrate')?.value)||5.25;
+  if(pricingMode!=='expiry'){
+    const elapsed=fractionElapsed(timeStr),minsLeft=Math.round(MARKET_MINS*(1-elapsed)),pct=(elapsed*100).toFixed(0);
+    const infoEl=document.getElementById('pricing-info');
+    if(infoEl){const ml=pricingMode==='estimated'?'Theta-decay estimate':`Black-Scholes · IV ${iv}% · Rate ${rate}%`;infoEl.innerHTML=`${ml} &nbsp;·&nbsp; Time ${timeStr} ET &nbsp;·&nbsp; ${minsLeft} min remaining (${pct}% elapsed)`;}
+  }
+  let totalPL=0,totalTheoPL=0,totalLoss=0;
+  active.forEach(d=>{const r=flyCalcWithMode(d,close);totalPL+=r.totalPL;totalLoss+=r.maxLoss*d.contracts;if(r.theoPL!=null)totalTheoPL+=r.theoPL;});
+  // True max combined profit: scan curve across all relevant prices
+  const allStrikes=active.flatMap(d=>[d.upper,d.middle,d.lower]);
+  const scanMin=Math.min(...allStrikes)-1, scanMax=Math.max(...allStrikes)+1;
+  let trueMaxProfit=0;
+  for(let p=scanMin;p<=scanMax;p+=0.01){
+    const combined=active.reduce((sum,d)=>{
+      const ev=Math.max(0,d.upper-p)-2*Math.max(0,d.middle-p)+Math.max(0,d.lower-p);
+      return sum+(ev-d.premium)*100*d.contracts;
+    },0);
+    if(combined>trueMaxProfit)trueMaxProfit=combined;
+  }
+  const totalMax=trueMaxProfit;
+  const returnPct=totalLoss>0?(totalPL/totalLoss)*100:0;
+  const theoRet=totalLoss>0?(totalTheoPL/totalLoss)*100:0;
+  const showTheo=pricingMode!=='expiry';
+  const dPL=showTheo?totalTheoPL:totalPL,dRet=showTheo?theoRet:returnPct;
+  const mLabel=showTheo?(pricingMode==='estimated'?'Est. P/L (now)':'Theoretical P/L'):'Combined P/L';
+  document.getElementById('summary').innerHTML=`
+    <div class="metric highlight"><div class="metric-label">${mLabel}</div><div class="metric-value ${pc(dPL)}">${fmt(dPL)}</div></div>
+    ${showTheo?`<div class="metric"><div class="metric-label">At-expiry P/L</div><div class="metric-value ${pc(totalPL)}">${fmt(totalPL)}</div></div>`:''}
+    <div class="metric"><div class="metric-label">Active positions</div><div class="metric-value neutral">${active.length}</div></div>
+    <div class="metric"><div class="metric-label">Max combined profit</div><div class="metric-value profit">+$${totalMax.toFixed(2)}</div></div>
+    <div class="metric"><div class="metric-label">Max combined loss</div><div class="metric-value loss">-$${totalLoss.toFixed(2)}</div></div>
+    <div class="metric"><div class="metric-label">Return %</div><div class="metric-value ${pc(dRet)}">${dRet>=0?'+':''}${dRet.toFixed(1)}%</div></div>`;
+  const resEl=document.getElementById('fly-results');
+  resEl.innerHTML='';
+  DEFAULTS.forEach((d,i)=>{
+    const pcEl=document.getElementById('pclose'+i);
+    if(!d.enabled||!d.contracts||!d.upper||!d.middle||!d.lower){if(pcEl)pcEl.value='';return;}
+    const r=flyCalcWithMode(d,close);
+    if(pcEl){const cv=(pricingMode!=='expiry'&&r.theoretical!=null)?r.theoretical:r.exitValue;pcEl.value=cv!=null?cv.toFixed(2):'';}
+    const showT=showTheo&&r.theoPL!=null,headPL=showT?r.theoPL:r.totalPL;
+    const card=document.createElement('div');
+    card.className='result-card';
+    card.innerHTML=`
+      <div class="result-card-header">
+        <span style="display:inline-block;width:8px;height:8px;border-radius:50%;background:${COLORS[i]};flex-shrink:0"></span>
+        <span class="result-card-title" style="color:${COLORS[i]}">${NAMES[i]} &mdash; ${d.upper}/${d.middle}/${d.lower}</span>
+        <span class="result-card-pl ${pc(headPL)}">${fmt(headPL)}</span>
+      </div>
+      ${showT?`<div class="detail-row"><span class="detail-label">${pricingMode==='estimated'?'Est.':'Theoretical'} P/L (now)</span><span class="detail-value ${pc(r.theoPL)}">${fmt(r.theoPL)}</span></div>`:''}
+      ${showT?`<div class="detail-row"><span class="detail-label">Theoretical value/share</span><span class="detail-value neutral">$${r.theoretical.toFixed(3)}</span></div>`:''}
+      <div class="detail-row"><span class="detail-label">At-expiry P/L</span><span class="detail-value ${pc(r.totalPL)}">${fmt(r.totalPL)}</span></div>
+      <div class="detail-row"><span class="detail-label">Exit value (expiry)</span><span class="detail-value neutral">$${r.exitValue.toFixed(2)}</span></div>
+      <div class="detail-row"><span class="detail-label">Max profit</span><span class="detail-value profit">+$${r.maxProfit.toFixed(2)}/contract</span></div>
+      <div class="detail-row"><span class="detail-label">Max loss</span><span class="detail-value loss">-$${r.maxLoss.toFixed(2)}/contract</span></div>
+      <div class="detail-row"><span class="detail-label">Breakevens</span><span class="detail-value info">$${r.beLow.toFixed(2)} – $${r.beHigh.toFixed(2)}</span></div>
+      <div class="detail-row"><span class="detail-label">Return %</span><span class="detail-value ${pc(r.returnPct)}">${r.returnPct>=0?'+':''}${r.returnPct.toFixed(1)}%</span></div>
+      <div class="detail-row"><span class="detail-label">Status</span><span class="detail-value ${r.inZone?'profit':'loss'}">${r.inZone?'✓ In profit zone':'✗ Outside zone'}</span></div>`;
+    resEl.appendChild(card);
+  });
+  updateChart(close);
+  const totalsEl=document.getElementById('totals-panel');
+  if(!totalsEl)return;
+  let rows='',grandPL=0,grandMax=0,grandLoss=0,grandContracts=0;
+  const activeForTotals=DEFAULTS.filter(d=>d.enabled&&d.contracts&&d.upper&&d.middle&&d.lower);
+  // Scan for true combined max
+  if(activeForTotals.length){
+    const ts=activeForTotals.flatMap(d=>[d.upper,d.middle,d.lower]);
+    const tMin=Math.min(...ts)-1,tMax=Math.max(...ts)+1;
+    for(let p=tMin;p<=tMax;p+=0.01){
+      const cv=activeForTotals.reduce((s,d)=>{const ev=Math.max(0,d.upper-p)-2*Math.max(0,d.middle-p)+Math.max(0,d.lower-p);return s+(ev-d.premium)*100*d.contracts;},0);
+      if(cv>grandMax)grandMax=cv;
+    }
+  }
+  DEFAULTS.forEach((d,i)=>{
+    const r=flyCalc(d,close);
+    const hasData=d.contracts&&d.upper&&d.middle&&d.lower;
+    const sc=d.enabled&&hasData?(r.inZone?'#00d4aa':'#f43f5e'):'#5a6a7a';
+    const es=d.enabled?'':`<span style="font-size:0.65rem;color:#5a6a7a;margin-left:6px">(disabled)</span>`;
+    if(d.enabled&&hasData){grandPL+=r.totalPL;grandMax+=r.maxProfit*d.contracts;grandLoss+=r.maxLoss*d.contracts;grandContracts+=d.contracts;}
+    const strikeStr=hasData?`${d.upper}/${d.middle}/${d.lower}`:'—';
+    const premStr=hasData?`$${d.premium.toFixed(2)}`:'—';
+    const pcCloseEl=document.getElementById('pclose'+i);
+    const pcCloseVal=pcCloseEl&&pcCloseEl.value?`$${parseFloat(pcCloseEl.value).toFixed(2)}`:'—';
+    const plStr=hasData?fmt(r.totalPL):'—';
+    const beStr=hasData?`$${r.beLow.toFixed(2)}–$${r.beHigh.toFixed(2)}`:'—';
+    const retStr=hasData?`${r.returnPct>=0?'+':''}${r.returnPct.toFixed(1)}%`:'—';
+    rows+=`<tr style="opacity:${d.enabled&&hasData?1:0.3}">
+      <td><span style="display:inline-flex;align-items:center;gap:6px"><span style="width:8px;height:8px;border-radius:50%;background:${COLORS[i]};display:inline-block;flex-shrink:0"></span>${NAMES[i]}${es}</span></td>
+      <td style="font-family:var(--font-mono);font-size:0.78rem">${strikeStr}</td>
+      <td style="font-family:var(--font-mono);font-size:0.78rem;text-align:center">${d.contracts||'—'}</td>
+      <td style="font-family:var(--font-mono);font-size:0.78rem;text-align:right">${premStr}</td>
+      <td style="font-family:var(--font-mono);font-size:0.78rem;text-align:right;color:var(--muted)">${pcCloseVal}</td>
+      <td style="font-family:var(--font-mono);font-size:0.78rem;text-align:right;color:${r.totalPL>=0?'#00d4aa':'#f43f5e'}">${plStr}</td>
+      <td style="font-family:var(--font-mono);font-size:0.78rem;text-align:right;color:#3b82f6">${beStr}</td>
+      <td style="font-family:var(--font-mono);font-size:0.78rem;text-align:right;color:${r.returnPct>=0?'#00d4aa':'#f43f5e'}">${r.returnPct>=0?'+':''}${r.returnPct.toFixed(1)}%</td>
+      <td style="text-align:center"><span style="font-size:0.7rem;color:${sc}">${d.enabled?(r.inZone?'✓':'✗'):'—'}</span></td>
+    </tr>`;
+  });
+  const gr=grandLoss>0?(grandPL/grandLoss)*100:0;
+  totalsEl.innerHTML=`<div style="overflow-x:auto"><table style="width:100%;border-collapse:collapse;font-size:0.8rem">
+    <thead><tr style="font-family:var(--font-mono);font-size:0.63rem;color:var(--muted);text-transform:uppercase;letter-spacing:0.08em">
+      <th style="text-align:left;padding:6px 8px 10px 0;border-bottom:1px solid var(--border)">Position</th>
+      <th style="text-align:left;padding:6px 8px 10px;border-bottom:1px solid var(--border)">Strikes</th>
+      <th style="text-align:center;padding:6px 8px 10px;border-bottom:1px solid var(--border)">Qty</th>
+      <th style="text-align:right;padding:6px 8px 10px;border-bottom:1px solid var(--border)">Premium</th>
+      <th style="text-align:right;padding:6px 8px 10px;border-bottom:1px solid var(--border)">Prem Close</th>
+      <th style="text-align:right;padding:6px 8px 10px;border-bottom:1px solid var(--border)">P/L</th>
+      <th style="text-align:right;padding:6px 8px 10px;border-bottom:1px solid var(--border)">Breakevens</th>
+      <th style="text-align:right;padding:6px 8px 10px;border-bottom:1px solid var(--border)">Return</th>
+      <th style="text-align:center;padding:6px 8px 10px;border-bottom:1px solid var(--border)">Zone</th>
+    </tr></thead>
+    <tbody>${rows}</tbody>
+    <tfoot>
+      <tr style="border-top:1px solid var(--border2)">
+        <td colspan="2" style="padding:10px 8px 4px 0;font-family:var(--font-mono);font-size:0.7rem;color:var(--muted);text-transform:uppercase">Totals (active only)</td>
+        <td style="padding:10px 8px 4px;font-family:var(--font-mono);font-size:0.85rem;font-weight:600;text-align:center">${grandContracts}</td>
+        <td style="padding:10px 8px 4px;font-family:var(--font-mono);text-align:right;color:var(--muted)">—</td>
+        <td style="padding:10px 8px 4px;font-family:var(--font-mono);text-align:right;color:var(--muted)">—</td>
+        <td style="padding:10px 8px 4px;font-family:var(--font-mono);font-size:1rem;font-weight:600;text-align:right;color:${grandPL>=0?'#00d4aa':'#f43f5e'}">${fmt(grandPL)}</td>
+        <td style="padding:10px 8px 4px;font-family:var(--font-mono);text-align:right;color:var(--muted)">—</td>
+        <td style="padding:10px 8px 4px;font-family:var(--font-mono);font-size:0.85rem;font-weight:600;text-align:right;color:${gr>=0?'#00d4aa':'#f43f5e'}">${gr>=0?'+':''}${gr.toFixed(1)}%</td>
+        <td></td>
+      </tr>
+      <tr><td colspan="5" style="padding:4px 0 0;font-size:0.7rem;color:var(--muted);font-family:var(--font-mono)">Max profit: <span style="color:#00d4aa">+$${grandMax.toFixed(2)}</span> &nbsp;·&nbsp; Max loss: <span style="color:#f43f5e">-$${grandLoss.toFixed(2)}</span> &nbsp;·&nbsp; Close: <span style="color:var(--text)">$${close.toFixed(2)}</span></td></tr>
+    </tfoot>
+  </table></div>`;
+}
+function updateChart(close) {
+  const enabled=DEFAULTS.filter(d=>d.enabled&&d.contracts&&d.upper&&d.middle&&d.lower);
+  if(!enabled.length)return;
+  const allS=enabled.flatMap(d=>[d.upper,d.lower]);
+  const minS=Math.min(...allS),maxS=Math.max(...allS),range=maxS-minS||20,step=range/60;
+  const prices=[];
+  for(let p=minS-range*0.3;p<=maxS+range*0.3;p+=step)prices.push(parseFloat(p.toFixed(2)));
+  const combinedPL=prices.map(p=>DEFAULTS.reduce((sum,d)=>{
+    if(!d.enabled)return sum;
+    const ev=Math.max(0,d.upper-p)-2*Math.max(0,d.middle-p)+Math.max(0,d.lower-p);
+    return sum+((ev-d.premium)*100*d.contracts);
+  },0));
+  const datasets=[];
+  DEFAULTS.forEach((d,i)=>{
+    if(!d.enabled)return;
+    const pls=prices.map(p=>{const ev=Math.max(0,d.upper-p)-2*Math.max(0,d.middle-p)+Math.max(0,d.lower-p);return parseFloat(((ev-d.premium)*100*d.contracts).toFixed(2));});
+    datasets.push({label:NAMES[i],data:pls,borderColor:COLORS[i],backgroundColor:'transparent',borderWidth:1.5,borderDash:[4,3],tension:0.1,pointRadius:0});
+  });
+  datasets.push({label:'Combined',data:combinedPL.map(v=>parseFloat(v.toFixed(2))),borderColor:'#ffffff',backgroundColor:'rgba(255,255,255,0.04)',borderWidth:2.5,fill:true,tension:0.1,pointRadius:0});
+  const ci=prices.reduce((b,p,i)=>Math.abs(p-close)<Math.abs(prices[b]-close)?i:b,0);
+  datasets.push({label:'Close',data:prices.map((_,i)=>i===ci?combinedPL[ci]:null),borderColor:'#ffffff',backgroundColor:'#ffffff',pointRadius:6,showLine:false});
+  const ctx=document.getElementById('plChart').getContext('2d');
+  if(chart)chart.destroy();
+  chart=new Chart(ctx,{type:'line',data:{labels:prices.map(p=>'$'+p.toFixed(0)),datasets},options:{responsive:true,plugins:{legend:{display:false},tooltip:{backgroundColor:'#161e28',borderColor:'rgba(255,255,255,0.1)',borderWidth:1,titleColor:'#5a6a7a',bodyColor:'#e8edf2',titleFont:{family:'IBM Plex Mono',size:11},bodyFont:{family:'IBM Plex Mono',size:11}}},scales:{x:{ticks:{maxTicksLimit:9,font:{family:'IBM Plex Mono',size:10},color:'#5a6a7a'},grid:{color:'rgba(255,255,255,0.04)'},border:{color:'rgba(255,255,255,0.08)'}},y:{ticks:{font:{family:'IBM Plex Mono',size:10},color:'#5a6a7a',callback:v=>'$'+v},grid:{color:'rgba(255,255,255,0.04)'},border:{color:'rgba(255,255,255,0.08)'}}}}});
+  const leg=document.getElementById('legend');
+  leg.innerHTML='';
+  DEFAULTS.forEach((d,i)=>{if(!d.enabled)return;leg.innerHTML+=`<div class="legend-item"><div class="legend-line" style="background:${COLORS[i]};opacity:0.7"></div>${NAMES[i]} ${d.upper}/${d.middle}/${d.lower}</div>`;});
+  leg.innerHTML+=`<div class="legend-item"><div class="legend-line" style="background:#fff"></div>Combined</div>`;
+  leg.innerHTML+=`<div class="legend-item"><div style="width:8px;height:8px;border-radius:50%;background:#fff"></div>Close $${close.toFixed(2)}</div>`;
+}
+['close','tradetime','iv','rfrate'].forEach(id=>{const el=document.getElementById(id);if(el)el.addEventListener('input',calc);});
+function parseTOS(i,raw,silent=false) {
+  const msg=document.getElementById('tos-msg'+i);
+  if(!raw.trim()){if(msg){msg.textContent='';msg.style.color='';}return;}
+  try {
+    const qtyMatch=raw.match(/(?:BOT|BUY|SOLD|SLD|SELL)\s+([+-]?\d+)/i);
+    const strikesMatch=raw.match(/(\d+\.?\d*)\/(\d+\.?\d*)\/(\d+\.?\d*)/);
+    const premMatch=raw.match(/@\.?(\d+\.?\d*)/);
+    if(!strikesMatch)throw new Error('Could not find strikes (e.g. 754/749/744)');
+    if(!premMatch)throw new Error('Could not find premium (e.g. @.94)');
+    const s1=parseFloat(strikesMatch[1]),s2=parseFloat(strikesMatch[2]),s3=parseFloat(strikesMatch[3]);
+    const upper=Math.max(s1,s2,s3),lower=Math.min(s1,s2,s3),middle=s1+s2+s3-upper-lower;
+    const premium=parseFloat(premMatch[1].startsWith('.')?'0'+premMatch[1]:premMatch[1]);
+    const contracts=qtyMatch?Math.abs(parseInt(qtyMatch[1])):DEFAULTS[i].contracts;
+    if(isNaN(upper)||isNaN(middle)||isNaN(lower))throw new Error('Invalid strikes');
+    if(isNaN(premium)||premium<=0)throw new Error('Invalid premium');
+    DEFAULTS[i].upper=upper;DEFAULTS[i].middle=middle;DEFAULTS[i].lower=lower;
+    DEFAULTS[i].premium=premium;DEFAULTS[i].contracts=contracts;
+    if(!silent) DEFAULTS[i].enabled=true;
+    document.getElementById('u'+i).value=upper;document.getElementById('m'+i).value=middle;
+    document.getElementById('l'+i).value=lower;document.getElementById('p'+i).value=premium;
+    document.getElementById('c'+i).value=contracts;
+    if(!silent) document.getElementById('en'+i).checked=true;
+    if(msg){msg.textContent=`✓ Parsed: ${upper}/${middle}/${lower}  premium $${premium.toFixed(2)}  qty ${contracts}`;msg.style.color='#00d4aa';}
+    if(!silent) calc();
+  } catch(e){if(msg){msg.textContent='✗ '+e.message;msg.style.color='#f43f5e';}}
+}
+function clearAll() {
+  for (let i = 0; i < DEFAULTS.length; i++) {
+    Object.assign(DEFAULTS[i], { upper:0, middle:0, lower:0, premium:0, contracts:0, enabled:true, tosString:'' });
+  }
+  buildUI();
+  fetchXSP();
+}
+function fetchXSP() {
+  const raw = (document.getElementById('ticker-input')?.value.trim() || '^XSP').toUpperCase();
+  doFetch(raw, !raw.startsWith('^'));
+}
+function doFetch(ticker, retryWithCaret) {
+  const btn = document.getElementById('fetch-xsp-btn');
+  const msg = document.getElementById('fetch-xsp-msg');
+  btn.textContent = '⟳ …';
+  msg.textContent = '';
+  msg.style.color = 'var(--muted)';
+  fetch('/pages/calculators/xspPrice.php?ticker=' + encodeURIComponent(ticker))
+    .then(r => r.json())
+    .then(data => {
+      if (data.error) {
+        if (retryWithCaret) { doFetch('^' + ticker, false); return; }
+        throw new Error(data.error);
+      }
+      document.getElementById('close').value = data.price;
+      msg.textContent = data.price;
+      btn.textContent = '⟳ Fetch';
+      calc();
+      setTimeout(() => { msg.textContent = ''; }, 3000);
+    })
+    .catch(() => {
+      msg.textContent = 'not found';
+      msg.style.color = 'var(--loss)';
+      btn.textContent = '⟳ Fetch';
+    });
+}
+setMode('expiry');
+buildUI();
+calc();
+</script>
+</body>
+</html>

@@ -35,6 +35,7 @@
         <nav>
             <ul>
                 <li><a href="index.php?page=journal">Journal</a></li>
+                <li><a href="index.php?page=butterflyCalculator">Butterflies</a></li>
             </ul>
         </nav>
     </header>
